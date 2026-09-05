@@ -5,7 +5,9 @@ must trace back to material in this folder — no guessing from memory.
 
 ## Layout
 
-- `videos/` — full playthrough recordings (unedited preferred).
+- `videos/` — full playthrough recordings (unedited preferred), or
+  URL-identified third-party series cited with per-claim timestamps
+  (nothing downloaded into the repo).
 - `screenshots/` — one shot per distinct screen/state (title, menus, HUD,
   pause, game over, each level/scene type).
 - `sessions/` — dated notes per capture session (use `_template.md`).
@@ -34,6 +36,10 @@ must trace back to material in this folder — no guessing from memory.
 
 - Observation only: no decompiling, no ripping art/audio/fonts from the
   playable copy. Screenshots and recordings are reference, not ship assets.
+- Third-party videos are cited by URL + timestamp and never downloaded
+  into the repo; auto-captions may guide mining but every sign-off claim
+  is confirmed against on-screen footage, and timings from edited footage
+  stay provisional until checked against the playable copy.
 - Every inventory claim needs a pointer to the video timestamp or screenshot
   that proves it. Unproven entries stay in `sessions/`, not the inventory.
 
@@ -46,7 +52,9 @@ Step 1 is done when ALL of these hold — not before:
 - [ ] `input-map.md` covers every game state (gameplay, menus, pause,
       game over) with no empty cells marked "unknown".
 - [ ] `screenshots/` holds every distinct screen/state; `videos/` holds at
-      least one full unedited playthrough with game audio.
+      least one full playthrough — a local unedited recording with game
+      audio, or a URL-identified third-party series cited throughout with
+      per-claim timestamps.
 - [ ] No videos committed to git (notes, inventory, input map, and small
       screenshots only).
 - [ ] Someone who knows the original has reviewed the inventory against
