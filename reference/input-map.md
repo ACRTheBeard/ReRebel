@@ -1,9 +1,12 @@
-# Input Map v0.1 (docs-derived, UNVERIFIED against live play)
+# Input Map v0.2 (docs + LP-mining + owner tests)
 
-Status: transcribed from the bundled README's keyboard reference
-(`sessions/2026-09-05-session-01.md`). Every row still needs a live-play
-or video source before it counts toward the sign-off gate. Mouse-driven
-equivalents are unmapped — capture them from play.
+Status: keyboard reference transcribed from the bundled README
+(`sessions/2026-09-05-session-01.md`); corroboration from 35 LP episodes
+(`sessions/2026-09-05-session-02.md` = A, `2026-09-06-session-03.md` = E)
+and owner testing (2026-09-06). Tiers: [D] docs only, [T] effect seen in
+LP (control unseen), [O] owner-confirmed/tested. Mouse is the primary
+device in all footage — zero verifiable key presses in 35 episodes, and
+the player testifies to "lack of hotkeys... a lot of clicking" (A-Ep 4).
 
 ## Strategic layer
 
@@ -15,16 +18,16 @@ equivalents are unmapped — capture them from play.
 | Fleet/ship finder | F3 | |
 | Troop finder | F4 | |
 | Personnel finder | F5 | |
-| Message window | F6 | |
-| Encyclopedia | F7 | |
+| Message window | F6 | [T] window used on camera both sides (key unseen): arrivals, maintenance, Emperor reports |
+| Encyclopedia | F7 | [T] opened + used on camera both sides (key unseen): stat comparison, lore |
 | Scroll lists | Cursor keys | |
 | Cycle entries (messages, encyclopedia) | Arrow keys | |
 | Accept / activate selection | Enter | Also dismisses mis-centered pause dialog after task-switch |
 | Cancel / close window | ESC | Also first recovery key on black screen / freeze |
 | Cycle through windows | Ctrl-Tab / Ctrl-Shift-Tab | |
 | Close all windows | Alt-W | |
-| Game speed + / − | Alt-+ / Alt-− (numpad) | |
-| Pause | Alt-P | |
+| Game speed + / − | Alt-+ / Alt-− (numpad) | [T] fast-forward effect seen (control unseen) |
+| Pause | Alt-P | [T] pause effect seen 3× incl. once to work around a bug (control unseen) |
 | Compose chat message | Alt-Y | Multiplayer |
 | View index | Alt-I | |
 | Status | Alt-S | |
@@ -34,8 +37,8 @@ equivalents are unmapped — capture them from play.
 | Build facilities | Alt-F | |
 | Galaxy overview | Alt-O | |
 | Game objectives | Alt-H | |
-| Manage garrisons | Alt-G | |
-| Manage production | Alt-U | |
+| Manage garrisons | Alt-G | [T] garrison management + C-3PO delegation seen (key unseen) |
+| Manage production | Alt-U | [T] production screen managed on camera (key unseen) |
 | Translate counterpart | Alt-V | |
 | Agent advice | Alt-A | |
 | GID: popular support | Alt-1 | |
@@ -76,11 +79,16 @@ original; footage confirmation still pending per the README gate).
 
 ## Menus / pause / game over
 
-Unmapped — capture from play. Known: save/load uses named slots with a
-save icon per slot; exit does NOT prompt to save.
+Mostly unmapped — capture from play. Known: save/load uses named slots
+with a save icon per slot; exit does NOT prompt to save [D]; saves used
+on camera repeatedly [T]; saving blocked mid-battle [O]. Pause menu +
+game options screens UNOBSERVED in either series. Victory/defeat ends
+UNOBSERVED (Empire finale closed with "victorious forever" narration,
+no end screen shown) [T].
 
 ## Notes
 
 - Keyboard AND mouse required (per original min spec); no joystick mentioned.
 - Task-switching is Alt-Tab with a recommendation to visit Options first.
-- Everything above is docs-derived; live-play verification pending.
+- Corroboration tiers ([D]/[T]/[O]) are per-row above; anything unmarked
+  is docs-only and still needs a live-play or footage source.
