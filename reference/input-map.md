@@ -52,19 +52,23 @@ GID = galactic-idle display filters (per README grouping).
 
 ## Tactical battles
 
+Owner corrections applied 2026-09-06 (source: owner's knowledge of the
+original; footage confirmation still pending per the README gate).
+
 | Action | Key | Notes |
 |--------|-----|-------|
-| Select task force 1–8 | 1–8 | |
+| Select task force 1–8 | 1–8 | Owner-confirmed: number row loosely corresponds to task-force numbers |
 | Attack nearest target of selected unit's type | Space | Fighter or capital ship |
 | Follow camera, task force 1–8 | F1–F8 | |
-| Follow camera, fighter group Red–Gold | F9–F12 | |
+| Follow camera, fighter group Red–Gold | F9–F12 | Owner-tested: F9–F12 adjust the camera but do NOT select the fighter group; group selection itself is mouse-only |
+| Pan tactical view | Directional buttons | Owner: pans like a map view (cf. docs numpad rotate/tilt rows below — reconcile with footage) |
+| Center view on selection (leaves follow) | Enter or center clickable button | Owner-confirmed: both Enter and the on-screen center button center on the selected ship, selection, or fighter group |
 | Data display window arrows | Tab / Shift-Tab | |
 | Rotate camera left / right | Numpad left / right | |
 | Tilt camera up / down | Numpad up / down | |
 | Zoom in | Numpad PgUp or + | |
 | Zoom out | Numpad PgDn or − | |
 | Toggle follow camera | Numpad . | |
-| Center on selected unit / leave follow | Enter | |
 | Memorize camera position | Numpad Home | |
 | Return to memorized position / leave follow | Numpad End | |
 | Death Star: arm laser | Fire button on Death Star panel | Cursor becomes target; left-click empty space cancels |
