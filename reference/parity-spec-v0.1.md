@@ -1,11 +1,15 @@
 # Parity Spec v0.1 DRAFT (NOT frozen — step-1 gate unsigned)
 
 Source: `gameplay-inventory.md` v0.2 + `input-map.md` v0.2 (35 LP
-episodes mined, transcript-level) + owner corrections 2026-09-06.
-Companions: `version-check.md`, `ip-triage.md`.
+episodes mined, transcript-level) + owner corrections 2026-09-06
+through 2026-09-08 + game-config export (`files/*.csv`) tabulated in
+`stat-tables.md`.
+Companions: `version-check.md`, `ip-triage.md`, `stat-tables.md`.
 
 Provenance tags: [T] transcript-level (footage confirmation still
-required), [O] owner knowledge/test, [D] bundled docs, [W] web source.
+required), [O] owner knowledge/test, [D] bundled docs, [W] web source,
+[G] game-config export (installed v1.02.00 community-edition copy;
+numeric stats only, prose excluded per `ip-triage.md`).
 Anything tagged [T] may change at footage review; timings are
 provisional until checked against the playable copy.
 
@@ -49,9 +53,31 @@ plays an outward support race over a "couple hundred days" opening
   diplomat) flips in ~2 weeks [T] (A-Ep 2/7/13). Low support leaks
   resources to the Empire (smuggling) [T] (A-Ep 7 3:35). Blockade
   halts ALL building and traps stationed personnel [T] (A-Ep 13 1:37,
-  E-Ep 7 13:53). Bombardment kills troops/production but civilian
+  E-Ep 7 13:53). Fleet presence alone never takes a planet — it
+  blockades Neutral/Enemy worlds [O]. Blockade mechanics [O]
+  (owner 2026-09-08): blockaders heal slowly; enemy fleet arrival
+  forces battle; inbound personnel face get-through / capture
+  (possibly injured) / death odds, death only for non-"important"
+  characters (owner believes: Vader + Emperor / Mothma + Luke +
+  Han + Leia); inbound fighters redirect to origin (or nearest
+  friendly if origin blockaded) with added travel time, immediately
+  and irreversibly; outbound personnel risk capture/injury/death,
+  Ion Cannon helps (fighters can't slip out — their presence
+  forces battle; retreat to nearest friendly needs a hyperdrive,
+  which TIE Fighter/Interceptor/Bomber lack); research missions stop;
+  in-transit facilities to the planet are destroyed while on-planet
+  production only pauses; blockades boost enemy-mission detection;
+  blockades slowly drift popular support to the more popular side
+  (ties tick to the non-blockading faction) — decisive for
+  blockading neutrals. Bombardment kills troops/production but civilian
   casualties cost support, and stripping infrastructure may NOT flip
-  neutrals [T] (A-Ep 11 11:56). Energy slots cap buildings (~12
+  neutrals [T] (A-Ep 11 11:56). Defense [O] (owner 2026-09-08):
+  laser batteries fire in bombardment AND assaults (a battery
+  damages one bombarding ship; embarked fighters die with a
+  destroyed home ship); shields blunt bombardment but yield to
+  overwhelming fleet/ship power; 2+ shields of any type (mixed
+  OK) block troop assaults entirely; ion cannons serve blockade
+  mechanics only. Energy slots cap buildings (~12
   observed) [T] (A-Ep 1 14:08).
 - Facilities: shipyards, training, construction yards, refineries,
   mines, shields, batteries, ion cannons, leveled gen-cores.
@@ -114,6 +140,12 @@ plays an outward support race over a "couple hundred days" opening
   management, production stewardship incl. turn-off; different voice
   per side; DOWNSIDE specced — auto-scraps own ships to cover
   maintenance shortfalls [T] (A-Ep 7, E-Ep 1/12/END).
+- Data tables [G]: full numeric stats for fighters (8), capital ships
+  (30), troops (10), facilities (14), special forces (9), characters
+  (60), sectors (20), and systems (200, map-useful columns) live in
+  `stat-tables.md` and are normative for v1 data. Behavioral rules
+  above stay as-is; the full behavioral spec is a future-version
+  deliverable.
 
 ## 4. Rules (binding unless tagged)
 
@@ -139,8 +171,11 @@ plays an outward support race over a "couple hundred days" opening
 New-game setup offers difficulty + map size, then an unskippable ~4-min
 briefing cutscene [T] (A-Ep 1 0:40). Played: intermediate/medium
 (Alliance) and normal/medium (Empire) — cross-series timing
-comparisons must note this. Full difficulty list UNMAPPED (manual
-unread) — OPEN gap.
+comparisons must note this. Difficulty list CONFIRMED by owner
+start-screen screenshots 2026-09-08 (`screenshots/2026-09-08-
+start-screen-difficulty-*.png`): Novice / Intermediate / Expert
+(hover tooltips, top-left selector) [O] — per-level effects still
+UNMAPPED.
 
 ## 6. UI flow and screens
 
@@ -152,9 +187,27 @@ encyclopedia (planets/ships/lore, used for stat comparison on camera);
 save/load with named slots and per-slot icons, NO prompt on exit [D],
 blocked mid-battle [O]; tactical view (pausable real-time, targeting,
 two-sided retreat, orbital-domination → sabotage, voiced callouts).
-Transitions between most screens: UNMAPPED. Pause menu, game-options
-screens, and victory/defeat end screens: UNOBSERVED in either series
-(Empire finale closed on narration, no end screen) [T] — OPEN gaps.
+Transitions: only FOUR exist, all video [O] (owner report
+2026-09-08). (1) Game-start as Alliance; (2) game-start as Empire
+(side-themed start videos). (3) Battle-beginning (plays going
+INTO battle, per side). (4) Battle-end (coming OUT: Won / Lost /
+Retreat per side) — Retreat further varies by player side × which
+side retreated, up to 4 combos (owner correction 2026-09-08).
+Full variant matrix still needs captures. Strategic pause
+OBSERVED [O] 2026-09-08: "Resume Game Play?" dialog + checkmark
+confirm (`screenshots/2026-09-08-strategic-pause-resume-
+dialog.png`); tactical pause = red "Battle Paused" text over
+frozen view [O]. Game options MAPPED [O] 2026-09-08, identical
+both layers: save slots (numbered/named, side-icon each), Sound
+Options, 5 Tactical Display toggles, "Restart the Game" /
+"Return to the Command Center", "Version: 1.02.00" footer.
+There are NO victory/defeat end screens [O] (owner report
+2026-09-08): wins, losses, and major events (Coruscant captured,
+HQ destroyed) play a short side-themed video, then play CONTINUES
+unless a win/lose condition was met — on win/lose the player is
+returned to the start screen. The LP Empire finale closing on
+narration with no end screen [T] is consistent with this. OPEN:
+full catalog of event videos per side.
 
 ## 7. Controls
 
@@ -165,7 +218,15 @@ windows, Alt-letter actions, Alt-1–9 idle filters, Alt-numpad speed,
 Alt-P pause); tactical select 1–8, Space attack-nearest, F1–F8 /
 F9–F12 follow cameras with F9–F12 camera-only and fighter groups
 mouse-only [O], Enter/center-button centers view, numpad rotate/tilt/
-zoom, Death Star arm/fire/recharge. Reconciliations still OPEN:
+zoom, Death Star arm/fire/recharge. Owner battle shots 2026-09-08
+(`screenshots/alliance-battle/`) confirm [O]: "Withdraw From
+Battle" button; Hammer / Left Hook formations; Navigation Point
+Set 1–2; ship data panel (task-force assignment, shield bars,
+crew, target + tactics); holocube wireframe view; pre-battle
+briefing (title + intel text + forces roster with portraits);
+post-battle report (victory/defeat text + Operational/Destroyed
+tallies, "No Casualties" / "No Survivors"). Reconciliations
+still OPEN:
 numpad rotate vs pan buttons, pause/camera/observe coverage, and all
 [D]-only rows need live-play or footage confirmation. KNOWN BUG (not
 parity): windowed-mode popups position by monitor coordinates [T]
@@ -192,17 +253,23 @@ Rim hunt ~100d; retreat-base saves ~60d hyperspace; armada ETA 7d.
 ## 10. Out of scope for v1
 
 - Multiplayer (exists in original: 2-player DirectPlay — plan
-  non-goal unless promoted).
-- Scenario editor (tooling, never a shipped feature).
+  non-goal unless promoted; if promoted, the only deltas are no
+  pause + one match speed, per `version-check.md` [O]).
+- Scenario editor (no official tool exists; scenario changes today
+  mean mods, which are a big lift — banked as a future-version
+  feature, not v1).
 - All original names, art, audio, prose (replace per `ip-triage.md`).
 - New modes, levels, systems, mobile/web targets (plan non-goals).
 
 ## 11. Open gaps blocking a v1 freeze
 
-Scoring; assault-vs-shields exact threshold; yard-speedup footage
-confirmation; observe mode; pause/options screens; victory/defeat end
-screens; full difficulty list; screen-to-screen transitions; full cue
-catalog; LP patch identity (`version-check.md`); screenshots for every
-screen/state; user review of inventory v0.2 vs the playable copy.
+Scoring; yard-speedup footage
+confirmation; observe mode (pause + options captured 2026-09-08 [O]); event-video
+catalog (win/lose/major events, per side — no end screens exist
+[O]); difficulty-level effects (list confirmed [O]); transition-video variant matrix (battle-in per side; battle-out Won/Lost/Retreat per side + 4-way retreat sub-matrix — confirm with captures); full cue
+catalog; community-edition map delta vs footage baseline
+(10 Standard sectors captured, baseline comparison still open —
+`version-check.md`); screenshots for every screen/state; user
+review of inventory v0.2 vs the playable copy.
 A claim graduates from this draft into the frozen spec only with
 footage + written rule per the README gate.

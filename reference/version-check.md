@@ -2,8 +2,10 @@
 
 Status: web-sourced reference for the parity spec. Provenance per
 claim: [W] = named public web source below (not footage, not the
-playable copy). Resolves three handoff open questions; one item
-(LP patch identity) stays open pending a Windows-side check.
+playable copy); [O] = owner report 2026-09-08. LP patch identity
+is now CLOSED (owner-confirmed 1.01-or-1.02, immaterial — see
+below); playable copy baselined as the 25th Anniversary community
+edition (map delta vs footage baseline still unmapped).
 
 ## Patch: 1.01 is the last official update; "1.02" is community packaging [W]
 
@@ -20,14 +22,46 @@ playable copy). Resolves three handoff open questions; one item
   LucasArts gameplay patch. No 1.01 gameplay changelog with
   observable in-game differences surfaced, so no inventory claim
   currently hinges on patch level.
+- Self-identification [O] (2026-09-08): the community edition's
+  game-options footer prints "Version: 1.02.00"
+  (`screenshots/2026-09-08-strategic-options.png`). So "1.02" is
+  confirmed as the edition's own version string, whatever its
+  lineage.
 
-## LP patch identity: STILL OPEN (needs Windows side)
+## LP patch identity: CLOSED (owner-confirmed, immaterial) [O]
 
-Transcripts never show a version string, so the series patch cannot be
-read from mining. To close: (1) check REBEXE properties/version on the
-playable copy; (2) one title-screen screenshot — record whether any
-version string is printed on title/menu; (3) check the LP uploader's
-video descriptions for GOG-vs-disc notes.
+The mined playthrough footage is v1.01 or v1.02. Both versions are
+essentially bug-fix patches with no gameplay differences, so no
+inventory or parity-spec claim hinges on which of the two the series
+ran. The Windows-side REBEXE/title-screen check is therefore dropped
+— nothing observable depends on it.
+
+## Playable copy: 25th Anniversary community edition [O]
+
+The owner's playable copy is the 25th Anniversary community edition,
+not the 1.01/1.02 baseline the footage was recorded on. Owner report:
+the edition changed the map somewhat, but gameplay and goals are
+unchanged.
+- Parity-spec implication: mechanics, victory conditions, timing,
+  and UI-flow claims transfer directly from the footage baseline to
+  the playable copy. Map-specific claims (starting sectors, Rim
+  layout, planet placement) do NOT transfer silently — verify each
+  against the community edition and note edition deltas.
+- Map delta, first evidence 2026-09-08 [O]
+  (`screenshots/standard-map-alliance/`): Standard-map Alliance
+  game, days 2–16, 10 sector panels captured (Deep Core, Core
+  Worlds North, Mid Rim North, Mandalorian Space, Sith Worlds,
+  Crossroads, Inner Rim, Bothan Space, Outer Rim South, Outer Rim
+  West). Sector panels carry up/down scroll arrows + X close;
+  planets show portrait + segmented loyalty bars (red/green
+  splits visible, e.g. Jakku, Fondor, Coruscant).
+- SUSPECTED community additions (unconfirmed — need a 1.01/1.02
+  baseline to compare): "Earth" (Mid Rim North panel); the whole
+  Mandalorian Space sector (Ajan Kloss, Mandalore, Dathomir…);
+  the Sith Worlds sector (Moraband, Dromund Kaas, Ziost…);
+  sequel-era names elsewhere (Takodana, Kef Bir, Crait, Jakku).
+  None of these may be treated as original content until the
+  baseline check lands.
 
 ## Min PC spec, 1998 box [W]
 
@@ -54,6 +88,11 @@ No Mac port either (open-rebellion README: "never got a Mac port").
   Win7/Vista guide).
 - Parity-spec implication: multiplayer = 2-player Alliance-vs-Empire
   online; no skirmish-vs-AI mode observed in 35 episodes.
+- Owner multiplayer rules [O] (2026-09-08): plays like the regular
+  game except (1) NO pause in multiplayer, (2) a single game speed is
+  chosen for the whole match. Mechanics otherwise transfer from
+  single-player; these two deltas are the only multiplayer-specific
+  rules recorded.
 
 ## Scenario editor: not shipped; community tools only [W]
 
