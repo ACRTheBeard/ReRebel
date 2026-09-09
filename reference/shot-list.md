@@ -54,11 +54,21 @@ committed to `screenshots/`. Priority order: gap-closers first.
   (Popular Support/Uprisings; Loyalty/Fleets/Personnel/Resources/
   Manufacturing/Defense/Display Off), Resources submenu (Available
   Energy/Raw Material/Mines/Refineries), message-type checkboxes +
-  Message Alert, idle-facility dialog, day-2 support map
+  Message Alert, idle-facility dialog, day-2 support map.
+  Completed 2026-09-09: Fleets submenu (Idle Fleets/Fleets Enroute),
+  Personnel submenu (Idle/Active Personnel), full Manufacturing submenu
+  (Shipyards/Training Facilities/Construction Yards + Idle variants),
+  Defense submenu (Batteries/Shield Generators/Fighter Squadrons/
+  Troopers/Death Star Shields), idle-construction-yards facility list
+  with counts, galaxy-map right-click menu (Build Ships/Troops/
+  Facilities, Galaxy Overview, Objectives, Manage Garrison/Production,
+  Translate Counterpart, Agent Advice) — all in `empire-side/`
 - [x] Message window, Empire side 2026-09-08
   (`screenshots/empire-side/2026-09-08-message-index-conflict.png`,
-  `-message-index-chat.png`): Conflict tab (bombardments of
-  Corellia/Xyquine/Svivren) + Chat tab + full tab bar
+  `-message-index-chat.png`, `-message-index-advice-tab.png`,
+  `-message-delete-tooltip.png`): Conflict tab (bombardments of
+  Corellia/Xyquine/Svivren) + Chat tab + Advice tab + full tab bar +
+  "Delete Selected Messages" tooltip (message deletion proof)
 - [ ] Encyclopedia (one entry page)
 - [ ] Save/load dialog (named slots + icons)
 - [x] Tactical battle view, paused (`alliance-battle/2026-09-08-
@@ -69,14 +79,39 @@ committed to `screenshots/`. Priority order: gap-closers first.
       Coruscant intro + forces roster, Coruscant defeat, Rakata
       victory-to-blockade, casualty tallies
 - [ ] Blockade state (planet under blockade — building halted)
-- [ ] Uprising state (planet in uprising)
+- [ ] Uprising state (planet in uprising — strategic-layer view still
+      open; event dialogs captured 2026-09-09 in `alliance-campaign/`:
+      "Uprising Begins on Mimban" riot art + "Uprising Ends on Mimban",
+      plus join/neutrality series sharing one celebration background —
+      Milagro/Makeb/Daalang/Mimban/Pasaana join, Gamor/Vandor abandon
+      the Imperial cause; remaining series titles are text variants of
+      the same art, in `OneDrive/Pictures/Screenshots/SW Rebellion/`
+      source shots 219–227)
 - [x] Empire-side batch, 2026-09-08 (`screenshots/empire-side/`,
   14 shots): Mid Rim South sector + Colonies panels, zoomed galaxy
   map, Empire tactical view (ISD task-force panel, prev-capital
   cycling tooltip), "Battle at Boonta" victory→blockade outcome
-  dialog. Unreviewed source shots left out: 182, 184, 188, 190,
-  191, 193, 194, 199 (probable tab/hover dupes, still in
-  `OneDrive/Pictures/Screenshots/SW Rebellion/`)
+  dialog. Unreviewed source shots resolved 2026-09-09 (not dupes —
+  all imported): Advice tab, message-delete tooltip, idle-yards list,
+  Fleets/Personnel/Manufacturing-full/Defense filter submenus,
+  galaxy-map right-click menu (see Finders entry above)
+- [x] Alliance campaign batch, 2026-09-09 (`screenshots/
+  alliance-campaign/`, 27 shots, Day ~8–129): Mimban bombardment
+  intro (green) + scorched summary + System Forces tabs (Troopers
+  incl. destroyed regiment, Personnel with Kaiya Andrimetrum
+  survivor); mission reports — Han TIE-fighter sabotage, Manaan
+  construction-yard sabotage, X-wing deployment at Commenor, Derlin
+  arrival, failed Wobani recruitment, Saleucami espionage + Wor
+  Tandell intel, Pellaeon abduction-death + coffin art; mission
+  planning/status (Wobani research+recruitment under Talon Karrde,
+  Dellalt recon ETA Day 17, Team/Decoy counts); research/diplomacy
+  continue? prompts (ship-design stall, Leia at Sriluur); Message
+  Index Manufacturing (Nebulon-B complete) + Fleet arrival + Coruscant
+  informants; sector panels Tingel Arm, Crossroads, Core Worlds
+  North (owner confirms Wor Tandell per the espionage report — the
+  sector-panel label misrendered as "Woy" during heavy map glitching
+  this session, so labels in these panels are suspect).
+  Exact dupes skipped (source 223=225, 219=224)
 
 ## C. Community-edition map delta (partially captured)
 
