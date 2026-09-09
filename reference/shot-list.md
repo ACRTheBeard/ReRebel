@@ -42,10 +42,23 @@ committed to `screenshots/`. Priority order: gap-closers first.
 - [ ] Planet screen
 - [ ] Production screen
 - [ ] Personnel / officers screen
-- [ ] Fleet screen
+- [x] Fleet screen, Empire side 2026-09-08
+  (`screenshots/empire-side/2026-09-08-fleet-roster.png`): ship
+  roster with counts + Galaxy Overview minimap
 - [ ] Research screen
-- [ ] Finders + galactic-idle filters (incl. support/uprising filters)
-- [ ] Message window (with agent/mission report visible)
+- [x] Finders + galactic filters, Empire side 2026-09-08
+  (`screenshots/empire-side/2026-09-08-galactic-filters-loyalty.png`,
+  `-resources-filter-submenu.png`, `-message-filters-dropdown.png`,
+  `-idle-construction-yards.png`, `-popular-support-day2.png`,
+  `-command-center-support-overlay.png`): Loyalty submenu
+  (Popular Support/Uprisings; Loyalty/Fleets/Personnel/Resources/
+  Manufacturing/Defense/Display Off), Resources submenu (Available
+  Energy/Raw Material/Mines/Refineries), message-type checkboxes +
+  Message Alert, idle-facility dialog, day-2 support map
+- [x] Message window, Empire side 2026-09-08
+  (`screenshots/empire-side/2026-09-08-message-index-conflict.png`,
+  `-message-index-chat.png`): Conflict tab (bombardments of
+  Corellia/Xyquine/Svivren) + Chat tab + full tab bar
 - [ ] Encyclopedia (one entry page)
 - [ ] Save/load dialog (named slots + icons)
 - [x] Tactical battle view, paused (`alliance-battle/2026-09-08-
@@ -57,6 +70,13 @@ committed to `screenshots/`. Priority order: gap-closers first.
       victory-to-blockade, casualty tallies
 - [ ] Blockade state (planet under blockade — building halted)
 - [ ] Uprising state (planet in uprising)
+- [x] Empire-side batch, 2026-09-08 (`screenshots/empire-side/`,
+  14 shots): Mid Rim South sector + Colonies panels, zoomed galaxy
+  map, Empire tactical view (ISD task-force panel, prev-capital
+  cycling tooltip), "Battle at Boonta" victory→blockade outcome
+  dialog. Unreviewed source shots left out: 182, 184, 188, 190,
+  191, 193, 194, 199 (probable tab/hover dupes, still in
+  `OneDrive/Pictures/Screenshots/SW Rebellion/`)
 
 ## C. Community-edition map delta (partially captured)
 
