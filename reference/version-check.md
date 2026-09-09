@@ -55,13 +55,18 @@ unchanged.
   West). Sector panels carry up/down scroll arrows + X close;
   planets show portrait + segmented loyalty bars (red/green
   splits visible, e.g. Jakku, Fondor, Coruscant).
-- SUSPECTED community additions (unconfirmed — need a 1.01/1.02
-  baseline to compare): "Earth" (Mid Rim North panel); the whole
-  Mandalorian Space sector (Ajan Kloss, Mandalore, Dathomir…);
-  the Sith Worlds sector (Moraband, Dromund Kaas, Ziost…);
-  sequel-era names elsewhere (Takodana, Kef Bir, Crait, Jakku).
-  None of these may be treated as original content until the
-  baseline check lands.
+- Map delta CONFIRMED 2026-09-08 [W+G], full report in
+  `map-baseline.md` (baseline = Prima guide Appendix A via
+  Internet Archive OCR). SECTORS: zero overlap — all 20 originals
+  (Abrion, Atrivis, Corellian, Sesswenna…) replaced by 20
+  geographic sectors (Deep Core, Mandalorian Space, Sith Worlds…).
+  SYSTEMS: 38 kept, ~160 removed, ~162 added. All suspects
+  confirmed as additions: "Earth", Mandalorian Space, Sith Worlds
+  (Moraband, Dromund Kaas, Ziost), sequel-era names (Jakku,
+  Takodana, Hosnian Prime, Ahch-to, Exegol…), plus prequel/
+  animated/TOR/Legends deep cuts. Probable renames: Abregado →
+  Abregado-rae, Calamari → Mon Cala, Yavin → Yavin 4 + Yavin
+  Prime. None of the added content may be treated as original.
 
 ## Min PC spec, 1998 box [W]
 

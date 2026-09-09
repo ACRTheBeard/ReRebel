@@ -269,9 +269,9 @@ Scoring; yard-speedup footage
 confirmation; observe mode closed 2026-09-08 [O]; event-video
 catalog closed 2026-09-08 [O] (002 skipped by game);
 difficulty effects closed 2026-09-08 [O]; scoring closed (no score) [O]; transition-video variant matrix (battle-in per side; battle-out Won/Lost/Retreat per side + 4-way retreat sub-matrix — confirm with captures); full cue
-catalog; community-edition map delta vs footage baseline
-(10 Standard sectors captured, baseline comparison still open —
-`version-check.md`); screenshots for every screen/state; user
+catalog; community-edition map delta BASELINED 2026-09-08
+(`map-baseline.md`: sectors fully replaced, 38/200 systems kept);
+screenshots for every screen/state; user
 review of inventory v0.2 vs the playable copy.
 A claim graduates from this draft into the frozen spec only with
 footage + written rule per the README gate.
