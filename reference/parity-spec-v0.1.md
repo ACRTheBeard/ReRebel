@@ -201,13 +201,15 @@ frozen view [O]. Game options MAPPED [O] 2026-09-08, identical
 both layers: save slots (numbered/named, side-icon each), Sound
 Options, 5 Tactical Display toggles, "Restart the Game" /
 "Return to the Command Center", "Version: 1.02.00" footer.
+Event-video catalog CLOSED [O] 2026-09-08 (local-only `files/*.smk`, git-ignored per README rule): intros (LucasArts, opening, Alliance, Empire), end credits, Death Star fires, HQ destroyed, Coruscant captured, Death Star sabotaged, Alliance wins/defeated, Empire wins/defeated, trench-run succeeds/fails. Note: 002 numbering slot skipped by the game (owner-confirmed, no video missing).
 There are NO victory/defeat end screens [O] (owner report
 2026-09-08): wins, losses, and major events (Coruscant captured,
 HQ destroyed) play a short side-themed video, then play CONTINUES
 unless a win/lose condition was met — on win/lose the player is
 returned to the start screen. The LP Empire finale closing on
-narration with no end screen [T] is consistent with this. OPEN:
-full catalog of event videos per side.
+narration with no end screen [T] is consistent with this. Event-video
+catalog closed 2026-09-08 (see above); per-side variant matrix (battle-in/out)
+still needs captures.
 
 ## 7. Controls
 
@@ -264,9 +266,9 @@ Rim hunt ~100d; retreat-base saves ~60d hyperspace; armada ETA 7d.
 ## 11. Open gaps blocking a v1 freeze
 
 Scoring; yard-speedup footage
-confirmation; observe mode (pause + options captured 2026-09-08 [O]); event-video
-catalog (win/lose/major events, per side — no end screens exist
-[O]); difficulty-level effects (list confirmed [O]); transition-video variant matrix (battle-in per side; battle-out Won/Lost/Retreat per side + 4-way retreat sub-matrix — confirm with captures); full cue
+confirmation; observe mode closed 2026-09-08 [O]; event-video
+catalog closed 2026-09-08 [O] (002 skipped by game);
+difficulty effects closed 2026-09-08 [O]; scoring closed (no score) [O]; transition-video variant matrix (battle-in per side; battle-out Won/Lost/Retreat per side + 4-way retreat sub-matrix — confirm with captures); full cue
 catalog; community-edition map delta vs footage baseline
 (10 Standard sectors captured, baseline comparison still open —
 `version-check.md`); screenshots for every screen/state; user

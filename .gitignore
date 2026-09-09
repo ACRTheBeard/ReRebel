@@ -1,0 +1,6 @@
+# Large binaries stay local-only and are never committed.
+# ref: reference/README.md ("Large binaries stay local-only; never commit videos to git")
+*.smk
+*.mp4
+*.avi
+*.mkv
