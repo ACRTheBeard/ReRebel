@@ -4,3 +4,11 @@
 *.mp4
 *.avi
 *.mkv
+# Godot-generated local files: editor import cache, empty editor
+# profile dirs, and build output.
+game/.godot/
+game/build/
+game/export_templates/
+game/feature_profiles/
+game/script_templates/
+game/text_editor_themes/
