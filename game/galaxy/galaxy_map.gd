@@ -41,7 +41,7 @@ var _speed_names := PackedStringArray()
 var _day_lengths := PackedFloat32Array()
 
 const CARD_SCENE := preload("res://galaxy/system_card.tscn")
-const PIP_SLOTS := 4
+const PIP_SLOTS := 2
 
 var _cards: Array = []
 var _next_slot := 0

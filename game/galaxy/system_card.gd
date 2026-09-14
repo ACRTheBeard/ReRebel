@@ -1,7 +1,9 @@
 class_name SystemCard
 extends PanelContainer
-## One picture-in-picture system card: sector mini-map plus a focused
-## system readout. Self-contained; the map only calls open/focus.
+## One picture-in-picture sector card: a large interactive mini-map of the
+## sector's systems plus a header. Self-contained; the map only calls
+## open/focus. Detail space below the map is reserved for future system
+## options and properties.
 
 signal closed
 signal focus_changed
@@ -14,7 +16,6 @@ var _flash_tween: Tween = null
 
 @onready var _title: Label = %CardTitle
 @onready var _mini: Control = %SectorMap
-@onready var _details: Label = %CardDetails
 
 
 func _ready() -> void:
@@ -33,21 +34,14 @@ func open_sector(sector_id_value: int, sector_tag: String, systems: Array) -> vo
 	_systems = systems
 	sector_id = sector_id_value
 	focused_id = -1
-	var explored := 0
-	for s in systems:
-		if s["explored"]:
-			explored += 1
-	_title.text = "%s — %d/%d charted" % [sector_tag, explored, systems.size()]
+	_title.text = sector_tag
 	_mini.call("show_sector", systems, focused_id)
-	_details.text = "Pick a system"
 	visible = true
 
 
 func focus_system(sys: Dictionary) -> void:
 	focused_id = int(sys["id"])
 	_mini.call("show_sector", _systems, focused_id)
-	var status := "Charted" if sys["explored"] else "Uncharted"
-	_details.text = "%s\nStatus: %s\nPosition %d, %d" % [sys["tag"], status, sys["pos"].x, sys["pos"].y]
 	focus_changed.emit()
 
 
