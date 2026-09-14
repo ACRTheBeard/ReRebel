@@ -4,7 +4,6 @@ extends Control
 
 const SETTINGS_PATH := "user://rerebel_settings.cfg"
 
-const SIDES: PackedStringArray = ["Alliance", "Empire"]
 const SIDE_SECTION := "side"
 const SIDE_KEY := "side"
 
@@ -17,19 +16,22 @@ const DIFFICULTY_SECTION := "difficulty"
 const DIFFICULTY_KEY := "difficulty"
 
 @onready var _about_dialog: AcceptDialog = %AboutDialog
+@onready var _title: Label = %Title
 @onready var _side_button: OptionButton = %SideButton
 @onready var _galaxy_size_button: OptionButton = %GalaxySizeButton
 @onready var _difficulty_button: OptionButton = %DifficultyButton
 
 
 func _ready() -> void:
-	_populate(_side_button, SIDES, _load_setting(SIDE_SECTION, SIDE_KEY, SIDES.size()))
+	_title.add_theme_font_size_override("font_size", int(GalaxyData.fonts()["menu_title"]))
+	var sides := GalaxyData.factions()
+	_populate(_side_button, sides, _load_setting(SIDE_SECTION, SIDE_KEY, sides.size()))
 	_populate(_galaxy_size_button, GALAXY_SIZES, _load_setting(GALAXY_SECTION, GALAXY_KEY, GALAXY_SIZES.size()))
 	_populate(_difficulty_button, DIFFICULTIES, _load_setting(DIFFICULTY_SECTION, DIFFICULTY_KEY, DIFFICULTIES.size()))
 
 
 func get_side_name() -> String:
-	return SIDES[_side_button.selected]
+	return GalaxyData.factions()[_side_button.selected]
 
 
 func get_galaxy_size() -> int:

@@ -17,12 +17,16 @@ var _flash_tween: Tween = null
 @onready var _details: Label = %CardDetails
 
 
+func _ready() -> void:
+	_title.add_theme_font_size_override("font_size", int(GalaxyData.fonts()["card_title"]))
+
+
 func flash() -> void:
 	if _flash_tween != null and _flash_tween.is_valid():
 		_flash_tween.kill()
 	modulate = GalaxyData.colors().get("flash", Color.WHITE)
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(self, "modulate", Color.WHITE, 1.0)
+	_flash_tween.tween_property(self, "modulate", Color.WHITE, float(GalaxyData.layout()["flash_seconds"]))
 
 
 func open_sector(sector_id_value: int, sector_tag: String, systems: Array) -> void:

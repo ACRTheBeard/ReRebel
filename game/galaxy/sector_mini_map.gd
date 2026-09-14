@@ -5,16 +5,22 @@ extends Control
 signal system_picked(system_id: int)
 
 const PAD := 18.0
-const DOT_RADIUS := 7.0
-const PICK_RADIUS := 16.0
-
 var _systems: Array = []
 var _focused := -1
+var _dot := 7.0
+var _pick := 16.0
+var _pad := 18.0
+var _tag_size := 16
 
 
 func show_sector(systems: Array, focused_id: int) -> void:
 	_systems = systems
 	_focused = focused_id
+	var layout := GalaxyData.layout()
+	_dot = float(layout["dot_mini"])
+	_pick = float(layout["pick_radius"])
+	_pad = float(layout["mini_pad"])
+	_tag_size = int(GalaxyData.fonts()["mini_tag"])
 	queue_redraw()
 
 
@@ -34,7 +40,7 @@ func layout() -> Dictionary:
 		min_p = min_p.min(p)
 		max_p = max_p.max(p)
 	var span := (max_p - min_p) + Vector2(40, 40)
-	var sc := minf((size.x - PAD * 2.0) / span.x, (size.y - PAD * 2.0) / span.y)
+	var sc := minf((size.x - _pad * 2.0) / span.x, (size.y - _pad * 2.0) / span.y)
 	var used := span * sc
 	var off := (size - used) * 0.5 - (min_p - Vector2(20, 20)) * sc
 	for s in _systems:
@@ -45,7 +51,7 @@ func layout() -> Dictionary:
 func system_at(point: Vector2) -> int:
 	var dots := layout()
 	var best := -1
-	var best_dist := PICK_RADIUS
+	var best_dist := _pick
 	for id in dots:
 		var d: float = (dots[id] as Vector2).distance_to(point)
 		if d < best_dist:
@@ -70,12 +76,12 @@ func _draw() -> void:
 		var sys := _system_for(id)
 		var theme := GalaxyData.colors()
 		var color: Color = theme.get("explored", Color.BLUE) if sys.get("explored", false) else theme.get("unexplored", Color.GRAY)
-		draw_circle(dots[id], DOT_RADIUS, color)
+		draw_circle(dots[id], _dot, color)
 		if int(id) == _focused:
-			draw_arc(dots[id], DOT_RADIUS + 4.0, 0.0, TAU, 32, Color.WHITE, 2.0)
+			draw_arc(dots[id], _dot + 4.0, 0.0, TAU, 32, Color.WHITE, 2.0)
 			if font != null:
 				draw_string(font, (dots[id] as Vector2) + Vector2(12, -8), str(sys.get("tag", "")),
-					HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16, Color.WHITE)
+					HORIZONTAL_ALIGNMENT_LEFT, -1.0, _tag_size, Color.WHITE)
 
 
 func _system_for(system_id: int) -> Dictionary:

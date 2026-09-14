@@ -31,12 +31,16 @@ theme_override_constants/separation = 16
 layout_mode = 2
 text = "Menu"
 
-[node name="SettingsLabel" type="Label" parent="./UI/TopBar"]
+[node name="DayLabel" type="Label" parent="./UI/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Settings"
+text = "Day 0"
 vertical_alignment = 1
+
+[node name="SpeedButton" type="OptionButton" parent="./UI/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="PiPGrid" type="Control" parent="./UI"]
 unique_name_in_owner = true
@@ -45,6 +49,7 @@ offset_right = 900.0
 offset_bottom = 720.0
 
 [node name="Panel" type="PanelContainer" parent="./UI"]
+unique_name_in_owner = true
 anchors_preset = 2
 anchor_left = 1.0
 anchor_top = 0.0
@@ -85,3 +90,4 @@ size_flags_vertical = 3
 
 [connection signal="pressed" from="UI/TopBar/MenuButton" to="." method="_on_menu_pressed"]
 [connection signal="item_selected" from="UI/Panel/Margin/Column/SectorButton" to="." method="_on_sector_selected"]
+[connection signal="item_selected" from="UI/TopBar/SpeedButton" to="." method="_on_speed_selected"]

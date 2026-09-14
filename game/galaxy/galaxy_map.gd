@@ -3,19 +3,24 @@ extends Node2D
 ## selection listing that sector's systems. Drag to pan, wheel to zoom,
 ## double-click a sector to focus it. Placeholder tags only.
 
-const MAP_WIDTH := 900.0
-const MAP_HEIGHT := 720.0
-const MAP_CENTER := Vector2(450.0, 360.0)
-const MARGIN := 40.0
-const CLICK_RADIUS := 14.0
-const SECTOR_RADIUS := 30.0
-const MIN_ZOOM := 0.6
-const MAX_ZOOM := 4.0
-const ZOOM_STEP := 1.15
-const DRAG_THRESHOLD := 6.0
-
 ## Pan/zoom are built and tested but parked until the map flow wants them.
 const ENABLE_PAN_ZOOM := false
+
+var _map_w := 900.0
+var _map_h := 720.0
+var _map_center := Vector2(450.0, 360.0)
+var _margin := 40.0
+var _click_radius := 14.0
+var _sector_radius := 30.0
+var _min_zoom := 0.6
+var _max_zoom := 4.0
+var _zoom_step := 1.15
+var _drag_threshold := 6.0
+var _pip_origin := Vector2(16, 64)
+var _pip_size := Vector2(426, 312)
+var _pip_gap := 16.0
+var _dot_e := 5.0
+var _dot_u := 4.0
 
 var _systems: Array = []
 var _sectors: Array = []
@@ -29,11 +34,13 @@ var _pressing := false
 var _dragging := false
 var _press_pos := Vector2.ZERO
 var _theme: Dictionary = {}
+var _day := 0.0
+var _shown_day := -1
+var _speed := 2
+var _speed_names := PackedStringArray()
+var _day_lengths := PackedFloat32Array()
 
 const CARD_SCENE := preload("res://galaxy/system_card.tscn")
-const PIP_ORIGIN := Vector2(16, 64)
-const PIP_SIZE := Vector2(426, 312)
-const PIP_GAP := 16.0
 const PIP_SLOTS := 4
 
 var _cards: Array = []
@@ -43,17 +50,20 @@ var _open_systems := {}
 @onready var _sector_label: Label = %SectorLabel
 @onready var _sector_button: OptionButton = %SectorButton
 @onready var _system_list: ItemList = %SystemList
-@onready var _settings_label: Label = %SettingsLabel
+@onready var _day_label: Label = %DayLabel
+@onready var _speed_button: OptionButton = %SpeedButton
 @onready var _pip_grid: Control = %PiPGrid
+@onready var _side_panel: PanelContainer = %Panel
 
 
 func _ready() -> void:
 	var settings := GalaxyData.load_settings()
 	_side = int(settings["side"])
 	_theme = GalaxyData.colors()
+	_apply_theme()
 	_sectors = GalaxyData.sectors_for_size(GalaxyData.load_sectors(), settings["size"])
 	_systems = GalaxyData.systems_for_sectors(GalaxyData.load_systems(), _sectors)
-	_settings_label.text = "%s  •  %s galaxy  •  %s" % [settings["side_name"], settings["size_name"], settings["difficulty_name"]]
+	_setup_clock(int(settings["speed"]))
 	_compute_transform()
 	_populate_sector_picker()
 	_spawn_cards()
@@ -61,9 +71,31 @@ func _ready() -> void:
 		select_sector(_sectors[0]["id"])
 
 
+func _apply_theme() -> void:
+	var layout := GalaxyData.layout()
+	var fonts := GalaxyData.fonts()
+	_map_w = float(layout["map_width"])
+	_map_h = float(layout["map_height"])
+	_map_center = Vector2(_map_w, _map_h) * 0.5
+	_margin = float(layout["map_margin"])
+	_click_radius = float(layout["click_radius"])
+	_sector_radius = float(layout["sector_radius"])
+	_min_zoom = float(layout["zoom_min"])
+	_max_zoom = float(layout["zoom_max"])
+	_zoom_step = float(layout["zoom_step"])
+	_drag_threshold = float(layout["drag_threshold"])
+	_pip_origin = layout["pip_origin"]
+	_pip_size = layout["pip_size"]
+	_pip_gap = float(layout["pip_gap"])
+	_dot_e = float(layout["dot_explored"])
+	_dot_u = float(layout["dot_unexplored"])
+	_side_panel.offset_left = -float(layout["panel_width"])
+	_sector_label.add_theme_font_size_override("font_size", int(fonts["panel_header"]))
+
+
 func map_pos(p: Vector2i) -> Vector2:
 	var base := Vector2(p) * _scale + _offset
-	return (base - MAP_CENTER) * _zoom + MAP_CENTER + _pan
+	return (base - _map_center) * _zoom + _map_center + _pan
 
 
 func reset_view() -> void:
@@ -102,8 +134,8 @@ func select_sector(sector_id: int) -> void:
 func _spawn_cards() -> void:
 	for i in range(PIP_SLOTS):
 		var card: SystemCard = CARD_SCENE.instantiate()
-		card.position = PIP_ORIGIN + Vector2(i % 2, i / 2) * (PIP_SIZE + Vector2(PIP_GAP, PIP_GAP))
-		card.size = PIP_SIZE
+		card.position = _pip_origin + Vector2(i % 2, i / 2) * (_pip_size + Vector2(_pip_gap, _pip_gap))
+		card.size = _pip_size
 		card.visible = false
 		card.closed.connect(_refresh_open_indicators)
 		card.focus_changed.connect(_refresh_open_indicators)
@@ -177,10 +209,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		match mb.button_index:
 			MOUSE_BUTTON_WHEEL_UP:
 				if mb.pressed and ENABLE_PAN_ZOOM:
-					_zoom_at(mb.position, ZOOM_STEP)
+					_zoom_at(mb.position, _zoom_step)
 			MOUSE_BUTTON_WHEEL_DOWN:
 				if mb.pressed and ENABLE_PAN_ZOOM:
-					_zoom_at(mb.position, 1.0 / ZOOM_STEP)
+					_zoom_at(mb.position, 1.0 / _zoom_step)
 			MOUSE_BUTTON_LEFT:
 				if mb.pressed:
 					if mb.double_click:
@@ -198,7 +230,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not ENABLE_PAN_ZOOM:
 			return
 		var mm := event as InputEventMouseMotion
-		if not _dragging and mm.position.distance_to(_press_pos) > DRAG_THRESHOLD:
+		if not _dragging and mm.position.distance_to(_press_pos) > _drag_threshold:
 			_dragging = true
 		if _dragging:
 			_pan_by(mm.relative)
@@ -212,9 +244,44 @@ func _on_sector_selected(index: int) -> void:
 	select_sector(int(_sector_button.get_item_metadata(index)))
 
 
+func _setup_clock(saved_speed: int) -> void:
+	var clock := GalaxyData.time()
+	_speed_names = clock["speed_names"]
+	_day_lengths = clock["day_lengths"]
+	_speed_button.clear()
+	for n in _speed_names:
+		_speed_button.add_item(n)
+	_speed = clampi(saved_speed, 0, _speed_names.size() - 1)
+	_speed_button.select(_speed)
+	_refresh_day()
+
+
+func _process(delta: float) -> void:
+	if delta > 0.0 and not _day_lengths.is_empty():
+		_tick(delta)
+
+
+## Advance the clock by real seconds; split out for exact testing.
+func _tick(seconds: float) -> void:
+	_day += seconds / _day_lengths[_speed]
+	_refresh_day()
+
+
+func _refresh_day() -> void:
+	var whole := int(_day)
+	if whole != _shown_day:
+		_shown_day = whole
+		_day_label.text = "Day %d" % whole
+
+
+func _on_speed_selected(index: int) -> void:
+	_speed = clampi(index, 0, _speed_names.size() - 1)
+	GalaxyData.save_setting("time", "speed", _speed)
+
+
 func _zoom_at(screen_point: Vector2, factor: float) -> void:
-	var next := clampf(_zoom * factor, MIN_ZOOM, MAX_ZOOM)
-	_pan = screen_point - MAP_CENTER - (screen_point - MAP_CENTER - _pan) * (next / _zoom)
+	var next := clampf(_zoom * factor, _min_zoom, _max_zoom)
+	_pan = screen_point - _map_center - (screen_point - _map_center - _pan) * (next / _zoom)
 	_zoom = next
 	queue_redraw()
 
@@ -226,14 +293,14 @@ func _pan_by(delta: Vector2) -> void:
 
 func _click_at(point: Vector2) -> void:
 	var best_sector := -1
-	var best_dist := CLICK_RADIUS
+	var best_dist := _click_radius
 	for sys in _systems:
 		var d := map_pos(sys["pos"]).distance_to(point)
 		if d < best_dist:
 			best_dist = d
 			best_sector = sys["sector"]
 	if best_sector < 0:
-		best_dist = SECTOR_RADIUS
+		best_dist = _sector_radius
 		for s in _sectors:
 			var d := map_pos(s["pos"]).distance_to(point)
 			if d < best_dist:
@@ -245,7 +312,7 @@ func _click_at(point: Vector2) -> void:
 
 func _double_click_at(point: Vector2) -> void:
 	var best: Dictionary = {}
-	var best_dist := SECTOR_RADIUS * 2.0
+	var best_dist := _sector_radius * 2.0
 	for sys in _systems:
 		var d := map_pos(sys["pos"]).distance_to(point)
 		if d < best_dist:
@@ -278,16 +345,16 @@ func _compute_transform() -> void:
 		min_p = min_p.min(p)
 		max_p = max_p.max(p)
 	var span := (max_p - min_p) + Vector2(40, 40)
-	_scale = minf((MAP_WIDTH - MARGIN * 2.0) / span.x, (MAP_HEIGHT - MARGIN * 2.0) / span.y)
+	_scale = minf((_map_w - _margin * 2.0) / span.x, (_map_h - _margin * 2.0) / span.y)
 	var used := span * _scale
-	_offset = (Vector2(MAP_WIDTH, MAP_HEIGHT) - used) * 0.5 - (min_p - Vector2(20, 20)) * _scale
+	_offset = (Vector2(_map_w, _map_h) - used) * 0.5 - (min_p - Vector2(20, 20)) * _scale
 
 
 func _draw() -> void:
 	for sys in _systems:
 		var p := map_pos(sys["pos"])
 		var color: Color = _theme.get("explored", Color.BLUE) if sys["explored"] else _theme.get("unexplored", Color.GRAY)
-		var radius := 5.0 if sys["explored"] else 4.0
+		var radius := _dot_e if sys["explored"] else _dot_u
 		if sys["sector"] == _selected_sector:
 			draw_circle(p, (radius + 3.0) * _zoom, _selection_color())
 		draw_circle(p, radius * _zoom, color)
@@ -297,4 +364,4 @@ func _draw() -> void:
 	if font != null:
 		for s in _sectors:
 			draw_string(font, map_pos(s["pos"]) + Vector2(10, -10), s["tag"],
-				HORIZONTAL_ALIGNMENT_LEFT, -1.0, 18, _theme.get("tag", Color.WHITE))
+				HORIZONTAL_ALIGNMENT_LEFT, -1.0, int(GalaxyData.fonts()["sector_tag"]), _theme.get("tag", Color.WHITE))

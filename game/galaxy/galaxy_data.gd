@@ -17,11 +17,46 @@ const DEFAULT_COLORS := {
 	"flash": Color(1.22, 1.22, 1.28),
 }
 
-static var _colors := {}
+const DEFAULT_LAYOUT := {
+	"map_width": 900.0,
+	"map_height": 720.0,
+	"map_margin": 40.0,
+	"click_radius": 14.0,
+	"sector_radius": 30.0,
+	"drag_threshold": 6.0,
+	"dot_explored": 5.0,
+	"dot_unexplored": 4.0,
+	"dot_mini": 7.0,
+	"pick_radius": 16.0,
+	"mini_pad": 18.0,
+	"panel_width": 364.0,
+	"pip_origin": Vector2(16, 64),
+	"pip_size": Vector2(426, 312),
+	"pip_gap": 16.0,
+	"zoom_min": 0.6,
+	"zoom_max": 4.0,
+	"zoom_step": 1.15,
+	"flash_seconds": 1.0,
+}
 
-const SIDES: PackedStringArray = ["Alliance", "Empire"]
+const DEFAULT_FONTS := {
+	"menu_title": 84,
+	"sector_tag": 18,
+	"card_title": 20,
+	"mini_tag": 16,
+	"panel_header": 22,
+}
+
+const DEFAULT_TIME := {
+	"speed_names": ["Very Slow", "Slow", "Normal", "Fast"],
+	"day_lengths": [8.0, 4.0, 2.0, 0.5],
+}
+
+const DEFAULT_FACTIONS: PackedStringArray = ["Alliance", "Empire"]
 const SIZES: PackedStringArray = ["Standard", "Large", "Huge"]
 const DIFFICULTIES: PackedStringArray = ["Novice", "Intermediate", "Expert"]
+
+static var _factions := PackedStringArray()
 
 
 static func load_sectors() -> Array:
@@ -64,28 +99,77 @@ static func systems_for_sectors(systems: Array, sectors: Array) -> Array:
 	return systems.filter(func(sys: Dictionary) -> bool: return sys["sector"] in ids)
 
 
-## Theme colors, loaded once from the theme folder. Missing file or
-## keys fall back to built-in defaults so the game always runs.
-static func colors() -> Dictionary:
-	if _colors.is_empty():
-		_colors = DEFAULT_COLORS.duplicate()
+static var _sections := {}
+
+
+## Any theme section, loaded once. Missing file or keys fall back to
+## built-in defaults so the game always runs.
+static func _section(name: String, defaults: Dictionary) -> Dictionary:
+	if not _sections.has(name):
+		var out := defaults.duplicate()
 		var file := ConfigFile.new()
 		if file.load(THEME_PATH) == OK:
-			for key in DEFAULT_COLORS:
-				_colors[key] = file.get_value("colors", key, DEFAULT_COLORS[key])
-	return _colors
+			for key in defaults:
+				out[key] = file.get_value(name, key, defaults[key])
+		_sections[name] = out
+	return _sections[name]
+
+
+static func colors() -> Dictionary:
+	return _section("colors", DEFAULT_COLORS)
+
+
+static func layout() -> Dictionary:
+	return _section("layout", DEFAULT_LAYOUT)
+
+
+static func fonts() -> Dictionary:
+	return _section("fonts", DEFAULT_FONTS)
+
+
+static func time() -> Dictionary:
+	var raw := _section("time", DEFAULT_TIME)
+	return {
+		"speed_names": PackedStringArray(Array(raw.get("speed_names", []))),
+		"day_lengths": PackedFloat32Array(Array(raw.get("day_lengths", []))),
+	}
+
+
+## Theme faction names, loaded once like colors. Falls back to
+## built-in defaults so the game always runs.
+static func factions() -> PackedStringArray:
+	if _factions.is_empty():
+		_factions = DEFAULT_FACTIONS
+		var file := ConfigFile.new()
+		if file.load(THEME_PATH) == OK:
+			var names: Variant = file.get_value("factions", "names", DEFAULT_FACTIONS)
+			if names is PackedStringArray and not (names as PackedStringArray).is_empty():
+				_factions = names
+	return _factions
 
 
 static func load_settings() -> Dictionary:
 	var file := ConfigFile.new()
 	file.load(SETTINGS_PATH)
-	var side := clampi(int(file.get_value("side", "side", 0)), 0, SIDES.size() - 1)
+	var sides := factions()
+	var side := clampi(int(file.get_value("side", "side", 0)), 0, sides.size() - 1)
 	var size := clampi(int(file.get_value("galaxy", "galaxy_size", 0)), 0, SIZES.size() - 1)
 	var diff := clampi(int(file.get_value("difficulty", "difficulty", 0)), 0, DIFFICULTIES.size() - 1)
+	var speed_count := maxi(1, int(time()["speed_names"].size()))
+	var speed := clampi(int(file.get_value("time", "speed", 2)), 0, speed_count - 1)
 	return {
-		"side": side, "size": size, "difficulty": diff,
-		"side_name": SIDES[side], "size_name": SIZES[size], "difficulty_name": DIFFICULTIES[diff],
+		"side": side, "size": size, "difficulty": diff, "speed": speed,
+		"side_name": sides[side], "size_name": SIZES[size], "difficulty_name": DIFFICULTIES[diff],
 	}
+
+
+static func save_setting(section: String, key: String, value: Variant) -> void:
+	var file := ConfigFile.new()
+	file.load(SETTINGS_PATH)
+	file.set_value(section, key, value)
+	var err := file.save(SETTINGS_PATH)
+	if err != OK:
+		push_warning("Could not save settings: %s" % error_string(err))
 
 
 static func _read_galaxy() -> Dictionary:
