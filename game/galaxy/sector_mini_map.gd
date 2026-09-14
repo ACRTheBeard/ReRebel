@@ -26,6 +26,8 @@ var _icon_size := 7.0
 var _bar_w := 44.0
 var _bar_h := 5.0
 var _bar_gap := 3.0
+var _energy_max := 6.0
+var _resource_max := 6.0
 var _side := 0
 var _theme: Dictionary = {}
 
@@ -43,10 +45,31 @@ func show_sector(systems: Array, focused_id: int) -> void:
 	_bar_w = float(layout["bar_width"])
 	_bar_h = float(layout["bar_height"])
 	_bar_gap = float(layout["bar_gap"])
+	_energy_max = maxf(1.0, float(layout["energy_max_slots"]))
+	_resource_max = maxf(1.0, float(layout["resource_max_slots"]))
 	_tag_size = int(GalaxyData.fonts()["mini_tag"])
 	_theme = GalaxyData.colors()
 	_side = int(GalaxyData.load_settings()["side"])
 	queue_redraw()
+
+
+## Per-bar slot configuration: placeholder counts, max for standard slot
+## size, and the used/open colors. Energy is white on blue, resource is
+## yellow on red.
+func _slot_config(bar: int, system_id: int) -> Dictionary:
+	if bar == 1:
+		return {
+			"slots": resource_slots(system_id),
+			"max": _resource_max,
+			"open": _theme.get("bar_resource", Color.RED),
+			"used": _theme.get("resource_used", Color.YELLOW),
+		}
+	return {
+		"slots": energy_slots(system_id),
+		"max": _energy_max,
+		"open": _theme.get("bar_energy", Color.BLUE),
+		"used": _theme.get("slot_used", Color.WHITE),
+	}
 
 
 ## Player faction color on the left, rival on the right.
@@ -111,6 +134,12 @@ func energy_slots(system_id: int) -> Dictionary:
 	return {"total": total, "used": 1 + (system_id * 7) % total}
 
 
+## Deterministic placeholder resource slots: 2-5 total, some used.
+func resource_slots(system_id: int) -> Dictionary:
+	var total := 2 + system_id % 4
+	return {"total": total, "used": 1 + (system_id * 5) % total}
+
+
 ## Largest dots that still fit: half the closest pair gap, minus room for
 ## the icon ring, clamped to the themed min/max. Pick radius always clears
 ## the dot and its icons.
@@ -138,15 +167,32 @@ func decor(center: Vector2, system_id: int) -> Dictionary:
 	var y := center.y + _dot + 6.0
 	for b in range(fills.size()):
 		var political := b == 2
-		bars.append({
-			"rect": Rect2(center.x - _bar_w * 0.5, y + float(b) * (_bar_h + _bar_gap), _bar_w, _bar_h),
+		var rect := Rect2(center.x - _bar_w * 0.5, y + float(b) * (_bar_h + _bar_gap), _bar_w, _bar_h)
+		var slots := {}
+		var entry := {
+			"rect": rect,
 			"fill": fills[b],
 			"frac": bar_frac(system_id, b),
 			"split": political,
 			"left": pair[0] if political else _theme.get(fills[b], Color.WHITE),
 			"right": pair[1] if political else Color(0, 0, 0, 0),
-			"slots": energy_slots(system_id) if b == 0 else {},
-		})
+			"slots": slots,
+		}
+		if b < 2:
+			# Slotted bars share one standard slot size: bar width at max
+			# slots, so fewer slots means a narrower bar, never narrower
+			# slots. All bars left-justify to the political bar's edge.
+			var cfg := _slot_config(b, system_id)
+			slots = cfg["slots"]
+			var w := float(slots["total"]) * (_bar_w / float(cfg["max"]))
+			rect.size.x = w
+			rect.position.x = center.x - _bar_w * 0.5
+			entry["rect"] = rect
+			entry["slots"] = slots
+			entry["open"] = cfg["open"]
+			entry["used"] = cfg["used"]
+			entry["divider"] = _theme.get("bar_divider", Color.BLACK)
+		bars.append(entry)
 	return {"icons": icons, "bars": bars}
 
 
@@ -212,7 +258,7 @@ func _draw_bar(bar: Dictionary) -> void:
 	var rect: Rect2 = bar["rect"]
 	draw_rect(rect, _theme.get("bar_track", Color.DARK_GRAY))
 	if not (bar["slots"] as Dictionary).is_empty():
-		_draw_slots(rect, bar["slots"], bar["left"])
+		_draw_slots(bar)
 		return
 	var frac := clampf(float(bar["frac"]), 0.0, 1.0)
 	if bool(bar["split"]):
@@ -229,17 +275,20 @@ func _draw_bar(bar: Dictionary) -> void:
 		draw_rect(fill, bar["left"])
 
 
-## Segmented slots: used segments solid, available ones left as track with
-## divider gaps so the slot count reads.
-func _draw_slots(rect: Rect2, slots: Dictionary, color: Color) -> void:
+## Segmented slots at one standard size: used slots white, available ones
+## blue, dark dividers between them so the count reads.
+func _draw_slots(bar: Dictionary) -> void:
+	var rect: Rect2 = bar["rect"]
+	var slots: Dictionary = bar["slots"]
 	var total := maxi(1, int(slots["total"]))
 	var used := clampi(int(slots["used"]), 0, total)
 	var seg := rect.size.x / float(total)
 	for i in range(total):
-		if i >= used:
-			break
 		var cell := Rect2(rect.position + Vector2(seg * float(i) + 1.0, 0), Vector2(seg - 2.0, rect.size.y))
-		draw_rect(cell, color)
+		draw_rect(cell, bar["used"] if i < used else bar["open"])
+	for i in range(1, total):
+		var x := rect.position.x + seg * float(i) - 1.0
+		draw_rect(Rect2(x, rect.position.y, 2.0, rect.size.y), bar["divider"])
 
 
 func _system_for(system_id: int) -> Dictionary:
