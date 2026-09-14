@@ -65,6 +65,7 @@ func _ready() -> void:
 	_systems = GalaxyData.systems_for_sectors(GalaxyData.load_systems(), _sectors)
 	_setup_clock(int(settings["speed"]))
 	_compute_transform()
+	_center_galaxy()
 	_populate_sector_picker()
 	_spawn_cards()
 	if not _sectors.is_empty():
@@ -335,6 +336,22 @@ func _populate_sector_picker() -> void:
 	for s in _sectors:
 		_sector_button.add_item(s["tag"])
 		_sector_button.set_item_metadata(_sector_button.item_count - 1, s["id"])
+
+
+## Center the backdrop spiral on the displayed sectors so the sectors
+## read as part of the galaxy. Runs after the transform is known.
+func _center_galaxy() -> void:
+	if _sectors.is_empty():
+		return
+	var centroid := Vector2.ZERO
+	for s in _sectors:
+		centroid += map_pos(s["pos"])
+	centroid /= float(_sectors.size())
+	var radius := 200.0
+	for s in _sectors:
+		radius = maxf(radius, centroid.distance_to(map_pos(s["pos"])))
+	var field: Node2D = $Backdrop/Starfield
+	field.call("build_galaxy", centroid, radius * float(GalaxyData.backdrop()["galaxy_scale"]))
 
 
 func _compute_transform() -> void:

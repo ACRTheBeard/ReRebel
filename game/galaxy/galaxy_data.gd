@@ -127,6 +127,22 @@ static func fonts() -> Dictionary:
 	return _section("fonts", DEFAULT_FONTS)
 
 
+const DEFAULT_BACKDROP := {
+	"star_count": 240,
+	"seed": 7,
+	"galaxy_image": "res://art/galaxy.png",
+	"galaxy_scale": 1.35,
+	"star_tint_a": Color(0.75, 0.85, 1.0),
+	"star_tint_b": Color(1.0, 0.90, 0.78),
+	"nebula_a": Color(0.22, 0.08, 0.38),
+	"nebula_b": Color(0.04, 0.22, 0.32),
+}
+
+
+static func backdrop() -> Dictionary:
+	return _section("backdrop", DEFAULT_BACKDROP)
+
+
 static func time() -> Dictionary:
 	var raw := _section("time", DEFAULT_TIME)
 	return {
