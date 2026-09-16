@@ -2,10 +2,10 @@ extends Control
 ## Mini sector map: every system of the sector as a dot, click one to
 ## focus it. Drawn from data, so zoom/pan independent.
 ##
-## Each system reserves room around and below itself: three placeholder
-## icons (dart flight, manufacturing square, factory) arc over the
-## dot, and three placeholder bars (energy, resource, political) sit below
-## it. All sizes come from the theme; fills are fixed placeholders until
+## Each system reserves room around and below itself: four placeholder
+## icons (manufacturing, fleet, ground base, mission) sit at the corners
+## of an invisible square around the dot, and three placeholder bars
+## (energy, resource, political) sit below it. All sizes come from the theme; fills are fixed placeholders until
 ## the simulation drives them. A system whose political share reaches the
 ## themed ownership threshold is owned: its dot takes the owner's faction
 ## color, otherwise it stays explored/unexplored. Icons and bars stay
@@ -20,6 +20,7 @@ const ALLIANCE_EMBLEM := preload("res://art/alliance_emblem.png")
 const EMPIRE_EMBLEM := preload("res://art/empire_emblem.png")
 const DART_FLIGHT := preload("res://art/dart_flight.png")
 const FACTORY_ICON := preload("res://art/factory.png")
+const GROUND_BASE_ICON := preload("res://art/ground_base.svg")
 var _systems: Array = []
 var _focused := -1
 var _dot := 7.0
@@ -28,7 +29,6 @@ var _dot_max := 10.0
 var _pick := 16.0
 var _pick_min := 16.0
 var _pad := 28.0
-var _tag_size := 16
 var _icon_dist := 20.0
 var _icon_size := 7.0
 var _bar_w := 44.0
@@ -36,6 +36,7 @@ var _bar_h := 5.0
 var _bar_gap := 3.0
 var _slot_w := 10.0
 var _slot_sep := 5.0
+var _tag_size := 10
 var _energy_min := 3.0
 var _energy_max := 6.0
 var _resource_min := 2.0
@@ -65,8 +66,8 @@ func show_sector(systems: Array, focused_id: int) -> void:
 	_resource_max = maxf(1.0, float(layout["resource_max_slots"]))
 	_energy_min = clampf(float(layout["energy_min_available"]), 1.0, _energy_max)
 	_resource_min = clampf(float(layout["resource_min_available"]), 1.0, _resource_max)
-	_tag_size = int(GalaxyData.fonts()["mini_tag"])
 	_theme = GalaxyData.colors()
+	_tag_size = int(GalaxyData.fonts()["mini_tag"])
 	_side = int(GalaxyData.load_settings()["side"])
 	_ownership_threshold = clampf(float(GalaxyData.politics()["ownership_threshold"]), 0.5, 1.0)
 	_neutral_share = clampf(float(GalaxyData.politics()["neutral_share"]), 0.0, 1.0)
@@ -158,7 +159,7 @@ func set_focused(system_id: int) -> void:
 ## stacked bars below. Uses the max dot so layout never clips.
 func _clearance() -> Dictionary:
 	var side := maxf(_pad, _icon_dist + _icon_size)
-	var bottom := maxf(_pad, _dot_max + 6.0 + 3.0 * _bar_h + 2.0 * _bar_gap + 4.0)
+	var bottom := maxf(_pad, _dot_max + 15.0 + 3.0 * _bar_h + 2.0 * _bar_gap + 17.0)
 	return {"side": side, "top": side, "bottom": bottom}
 
 
@@ -227,7 +228,7 @@ func _fit_dots(points: Array) -> void:
 		for j in range(i + 1, points.size()):
 			gap = minf(gap, (points[i] as Vector2).distance_to(points[j]))
 	_dot = clampf(gap * 0.5 - ICON_ROOM, _dot_min, _dot_max)
-	_pick = maxf(_pick_min, _dot + _icon_dist)
+	_pick = maxf(_pick_min, _dot + _icon_dist * sqrt(2.0))
 
 
 ## Icon slots and bar rects for a system. Pure layout math so tests can
@@ -236,14 +237,13 @@ func _fit_dots(points: Array) -> void:
 ## faction index ("owner", -1 while neutral).
 func decor(center: Vector2, system_id: int) -> Dictionary:
 	var icons: Array = []
-	var angles := [-90.0, -30.0, -150.0]
-	for k in range(angles.size()):
-		var a := deg_to_rad(angles[k])
-		icons.append({"pos": center + Vector2(cos(a), sin(a)) * _icon_dist, "kind": k})
+	var corners := [{"offset": Vector2(-1.0, -1.0), "kind": 2}, {"offset": Vector2(1.0, -1.0), "kind": 0}, {"offset": Vector2(-1.0, 1.0), "kind": 3}, {"offset": Vector2(1.0, 1.0), "kind": 1}]
+	for corner in corners:
+		icons.append({"pos": center + corner["offset"] * _icon_dist, "kind": corner["kind"]})
 	var pair := _faction_pair()
 	var bars: Array = []
 	var fills := ["bar_energy", "bar_resource", "bar_political"]
-	var y := center.y + _dot + 6.0
+	var y := center.y + _dot + 15.0
 	for b in range(fills.size()):
 		var political := b == 2
 		var rect := Rect2(center.x - _bar_w * 0.5, y + float(b) * (_bar_h + _bar_gap), _bar_w, _bar_h)
@@ -294,11 +294,11 @@ func _gui_input(event: InputEvent) -> void:
 
 func _draw() -> void:
 	var dots := layout()
-	var font := ThemeDB.fallback_font
 	var icon_cols: Array = [
 		_theme.get("icon_fleet", Color.RED),
-		_theme.get("icon_mfg", Color.YELLOW),
 		_theme.get("icon_unit", Color.CYAN),
+		_theme.get("icon_mfg", Color.YELLOW),
+		_theme.get("icon_ground", Color.CYAN),
 	]
 	for id in dots:
 		var center: Vector2 = dots[id]
@@ -310,14 +310,10 @@ func _draw() -> void:
 				_draw_icon(icon["pos"], int(icon["kind"]), icon_cols[int(icon["kind"])])
 			for bar in deco["bars"]:
 				_draw_bar(bar)
-		if int(id) == _focused:
-			draw_arc(center, _dot + 4.0, 0.0, TAU, 32, Color.WHITE, 2.0)
-			if font != null:
-				draw_string(font, center + Vector2(12, -8), str(sys.get("tag", "")),
-					HORIZONTAL_ALIGNMENT_LEFT, -1.0, _tag_size, Color.WHITE)
+			_draw_system_tag(deco["bars"][2]["rect"], str(sys.get("tag", "")))
 
-
-## kind 0 flight of darts, 1 emblem, 2 factory.
+## kind 0 flight of darts (fleet), 1 emblem (mission), 2 factory
+## (manufacturing), 3 ground base.
 func _draw_icon(pos: Vector2, kind: int, color: Color) -> void:
 	var s := _icon_size * 2.4
 	match kind:
@@ -329,9 +325,12 @@ func _draw_icon(pos: Vector2, kind: int, color: Color) -> void:
 			var emblem := ALLIANCE_EMBLEM if _side == 0 else EMPIRE_EMBLEM
 			var rect2 := Rect2(pos - Vector2(s, s) * 0.55, Vector2(s, s) * 1.1)
 			draw_texture_rect(emblem, rect2, false, color)
-		_:
+		2:
 			var rect3 := Rect2(pos - Vector2(s, s) * 0.55, Vector2(s, s) * 1.1)
 			draw_texture_rect(FACTORY_ICON, rect3, false, color)
+		_:
+			var rect4 := Rect2(pos - Vector2(s, s) * 0.55, Vector2(s, s) * 1.1)
+			draw_texture_rect(GROUND_BASE_ICON, rect4, false, color)
 
 
 ## Cell and divider geometry for a slotted bar at a fixed pitch: every
@@ -376,6 +375,23 @@ func _draw_bar(bar: Dictionary) -> void:
 		var fill := rect
 		fill.size.x *= frac
 		draw_rect(fill, bar["left"])
+
+
+func _draw_system_tag(political_rect: Rect2, tag: String) -> void:
+	if tag.is_empty():
+		return
+	var font := ThemeDB.fallback_font
+	if font == null:
+		return
+	draw_string(
+		font,
+		Vector2(political_rect.position.x, political_rect.end.y + _tag_size + 2.0),
+		tag,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		political_rect.size.x,
+		_tag_size,
+		_theme.get("tag", Color.WHITE),
+	)
 
 
 ## Segmented slots at the standard full-width size: available slots in

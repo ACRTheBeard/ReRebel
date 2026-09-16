@@ -39,6 +39,7 @@ var _shown_day := -1
 var _speed := 2
 var _speed_names := PackedStringArray()
 var _day_lengths := PackedFloat32Array()
+var _map_filter := 0
 
 const CARD_SCENE := preload("res://galaxy/system_card.tscn")
 const PIP_SLOTS := 2
@@ -61,6 +62,7 @@ var _game_data: GameData
 @onready var _pip_grid: Control = %PiPGrid
 @onready var _side_panel: PanelContainer = %Panel
 @onready var _top_bar: PanelContainer = $UI/TopBar
+@onready var _filter_button: OptionButton = %MapFilterButton
 
 
 func _ready() -> void:
@@ -72,6 +74,7 @@ func _ready() -> void:
 	_sectors = GalaxyData.sectors_for_size(GalaxyData.load_sectors(), settings["size"])
 	_systems = GalaxyData.systems_for_sectors(GalaxyData.load_systems(), _sectors)
 	_game_data = GameData.new(_side, [], _systems, int(settings["difficulty"]))
+	_setup_map_filter()
 	_setup_clock(int(settings["speed"]))
 	_compute_transform()
 	_center_galaxy()
@@ -131,6 +134,7 @@ func _apply_faction_top_bar_theme() -> void:
 	var dark_accent := accent.darkened(0.65)
 	var content := _top_bar.get_node("Content") as HBoxContainer
 	var menu := content.get_node("MenuButton") as Button
+	var filter := content.get_node("MapFilterButton") as OptionButton
 	var speed := content.get_node("SpeedButton") as OptionButton
 	var panel := _top_bar_style(Color(0.025, 0.055, 0.11, 0.96), accent, 6)
 	panel.shadow_color = Color(0, 0, 0, 0.5)
@@ -140,7 +144,7 @@ func _apply_faction_top_bar_theme() -> void:
 	var normal := _top_bar_style(Color(0.04, 0.08, 0.13, 0.95), dark_accent)
 	var hover := _top_bar_style(accent.darkened(0.55), bright)
 	var pressed := _top_bar_style(accent.darkened(0.4), Color.WHITE)
-	for control in [menu, speed]:
+	for control in [menu, filter, speed]:
 		control.add_theme_stylebox_override("normal", normal)
 		control.add_theme_stylebox_override("hover", hover)
 		control.add_theme_stylebox_override("pressed", pressed)
@@ -250,10 +254,6 @@ func _systems_in_sector(sector_id: int) -> Array:
 	return out
 
 
-func _selection_color() -> Color:
-	return _theme.get("alliance", Color.RED) if _side == 0 else _theme.get("empire", Color.GREEN)
-
-
 func _sector_tag(sector_id: int) -> String:
 	for s in _sectors:
 		if s["id"] == sector_id:
@@ -313,6 +313,12 @@ func _setup_clock(saved_speed: int) -> void:
 	_speed_button.select(_speed)
 	_refresh_day()
 
+func _setup_map_filter() -> void:
+	_filter_button.clear()
+	_filter_button.add_item("Ownership")
+	_filter_button.add_item("Popular Support")
+	_filter_button.select(_map_filter)
+
 
 func _process(delta: float) -> void:
 	if delta > 0.0 and not _day_lengths.is_empty():
@@ -349,6 +355,29 @@ func _refresh_resource_labels() -> void:
 		_raw_label.text = "Raw %d" % int(factions[_side].get('raw', 0))
 		_refined_label.text = "Refined %d" % int(factions[_side].get('refined', 0))
 		_maintenance_label.text = "Maintenance %d" % int(factions[_side].get('maintenance', 0))
+
+func _on_map_filter_selected(index: int) -> void:
+	_map_filter = clampi(index, 0, 1)
+	queue_redraw()
+
+func _popular_support_color(system: Dictionary) -> Color:
+	var share := float(system.get("economy", {}).get("political_share", 0.5))
+	var player: Color = _theme.get("alliance", Color.RED) if _side == 0 else _theme.get("empire", Color.GREEN)
+	var rival: Color = _theme.get("empire", Color.GREEN) if _side == 0 else _theme.get("alliance", Color.RED)
+	var neutral := Color(0.62, 0.66, 0.72)
+	if share < 0.5:
+		return rival.lerp(neutral, share * 2.0)
+	return neutral.lerp(player, (share - 0.5) * 2.0)
+
+func _ownership_color(system: Dictionary) -> Color:
+	if not bool(system.get("explored", false)):
+		return _theme.get("unexplored", Color.GRAY)
+	var owner := int(system.get("owner", -1))
+	if owner == 0:
+		return _theme.get("alliance", Color.RED)
+	if owner == 1:
+		return _theme.get("empire", Color.GREEN)
+	return _theme.get("explored", Color.BLUE)
 
 
 #stub to handle unit processing
@@ -457,15 +486,52 @@ func _compute_transform() -> void:
 func _draw() -> void:
 	for sys in _systems:
 		var p := map_pos(sys["pos"])
-		var color: Color = _theme.get("explored", Color.BLUE) if sys["explored"] else _theme.get("unexplored", Color.GRAY)
+		var color: Color
+		if _map_filter == 1 and sys["explored"]:
+			color = _popular_support_color(sys)
+		else:
+			color = _ownership_color(sys)
 		var radius := _dot_e if sys["explored"] else _dot_u
-		if sys["sector"] == _selected_sector:
-			draw_circle(p, (radius + 3.0) * _zoom, _selection_color())
-		draw_circle(p, radius * _zoom, color)
+		_draw_star(p, radius * _zoom, color, not bool(sys["explored"]))
 		if _open_systems.has(int(sys["id"])):
 			draw_arc(p, (radius + 6.0) * _zoom, 0.0, TAU, 32, _theme.get("open", Color.ORANGE), 2.0)
+		_draw_headquarters_marker(sys, p, radius)
 	var font := ThemeDB.fallback_font
 	if font != null:
 		for s in _sectors:
 			draw_string(font, map_pos(s["pos"]) + Vector2(10, -10), s["tag"],
 				HORIZONTAL_ALIGNMENT_LEFT, -1.0, int(GalaxyData.fonts()["sector_tag"]), _theme.get("tag", Color.WHITE))
+
+func _draw_star(position: Vector2, radius: float, color: Color, uncharted: bool) -> void:
+	if uncharted:
+		var arm := maxf(1.0, radius * 1.4)
+		var width := maxf(0.8, radius * 0.45)
+		draw_line(position + Vector2(-arm, -arm), position + Vector2(arm, arm), color, width, true)
+		draw_line(position + Vector2(-arm, arm), position + Vector2(arm, -arm), color, width, true)
+		return
+	var glow := Color(color, 0.22)
+	var spike := Color(color, 0.7)
+	var length := radius * 2.8
+	var width := maxf(0.7, radius * 0.35)
+	draw_line(position - Vector2(length, 0), position + Vector2(length, 0), spike, width, true)
+	draw_line(position - Vector2(0, length), position + Vector2(0, length), spike, width, true)
+	draw_circle(position, maxf(1.0, radius * 0.65), color)
+
+func _draw_headquarters_marker(system: Dictionary, position: Vector2, radius: float) -> void:
+	if _game_data == null:
+		return
+	var known_headquarters := _game_data.headquarters_known_to(_side)
+	for faction_id in known_headquarters:
+		if int(known_headquarters[faction_id]) != int(system.get("id", -1)):
+			continue
+		var accent: Color = _theme.get("alliance", Color.RED) if int(faction_id) == 0 else _theme.get("empire", Color.GREEN)
+		var r := (radius + 9.0) * _zoom
+		var points := PackedVector2Array([
+			position + Vector2(0, -r),
+			position + Vector2(r, 0),
+			position + Vector2(0, r),
+			position + Vector2(-r, 0),
+		])
+		draw_polyline(points, accent, maxf(2.0, 2.0 * _zoom), true)
+		draw_string(ThemeDB.fallback_font, position + Vector2(r + 4.0, 4.0),
+			"HQ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, accent)

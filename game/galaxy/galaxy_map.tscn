@@ -39,6 +39,10 @@ theme_override_constants/separation = 16
 layout_mode = 2
 text = "Menu"
 
+[node name="MapFilterButton" type="OptionButton" parent="UI/TopBar/Content" unique_id=711423607]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="DayLabel" type="Label" parent="UI/TopBar/Content" unique_id=250614096]
 unique_name_in_owner = true
 layout_mode = 2
@@ -119,5 +123,6 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [connection signal="pressed" from="UI/TopBar/Content/MenuButton" to="." method="_on_menu_pressed"]
+[connection signal="item_selected" from="UI/TopBar/Content/MapFilterButton" to="." method="_on_map_filter_selected"]
 [connection signal="item_selected" from="UI/TopBar/Content/SpeedButton" to="." method="_on_speed_selected"]
 [connection signal="item_selected" from="UI/Panel/Margin/Column/SectorButton" to="." method="_on_sector_selected"]

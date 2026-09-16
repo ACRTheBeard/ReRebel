@@ -7,6 +7,10 @@ const FACTION_COUNT := 2
 const ALLIANCE_SIDE := 0
 const EMPIRE_SIDE := 1
 const EMPIRE_HQ_SYSTEM_ID := 265
+const CONSTRUCTION_YARD_ID := 3
+const SHIPYARD_ID := 4
+const BASIC_TRAINING_ID := 5
+const INHABITED_FACILITY_CHANCE := 0.03
 
 var game_data := {}
 var _difficulty := 1
@@ -93,13 +97,17 @@ func _initKnowledge() -> void:
 func _initHeadquarters() -> void:
 	var alliance_candidates: Array = []
 	for system in getData('system_data'):
-		if not bool(system.get('explored', false)):
+		if not bool(system.get('explored', false)) and int(system.get('id', -1)) != EMPIRE_HQ_SYSTEM_ID:
 			alliance_candidates.append(int(system.get('id', -1)))
 	var alliance_hq := -1
 	if not alliance_candidates.is_empty():
 		var rng := RandomNumberGenerator.new()
-		rng.seed = abs(_difficulty * 7919 + alliance_candidates.size() * 1009)
+		rng.randomize()
 		alliance_hq = alliance_candidates[rng.randi_range(0, alliance_candidates.size() - 1)]
+	_set_headquarters_system(alliance_hq, ALLIANCE_SIDE)
+	_set_headquarters_system(EMPIRE_HQ_SYSTEM_ID, EMPIRE_SIDE)
+	_initKnowledge()
+	_calculate_maintenance()
 	setData('headquarters', {
 		ALLIANCE_SIDE: {
 			'system_id': alliance_hq,
@@ -110,6 +118,31 @@ func _initHeadquarters() -> void:
 			'known_to': [ALLIANCE_SIDE, EMPIRE_SIDE],
 		},
 	})
+
+func _set_headquarters_system(system_id: int, faction_id: int) -> void:
+	if system_id < 0:
+		return
+	for system in getData('system_data'):
+		if int(system.get('id', -1)) != system_id:
+			continue
+		system['explored'] = true
+		system['owner'] = faction_id
+		var buildings := _seed_buildings(system, true)
+		var economy: Dictionary = system.get('economy', {})
+		economy['raw'] = _count_buildings(buildings, MINE_ID)
+		economy['refined'] = mini(economy['raw'], _count_buildings(buildings, REFINERY_ID))
+		economy['political_share'] = 1.0 if faction_id == ALLIANCE_SIDE else 0.0
+		system['economy'] = economy
+		return
+
+func headquarters_known_to(faction_id: int) -> Dictionary:
+	var known: Dictionary = {}
+	var headquarters: Dictionary = game_data.get('headquarters', {})
+	for faction_id_key in headquarters:
+		var headquarters_data: Dictionary = headquarters[faction_id_key]
+		if faction_id in headquarters_data.get('known_to', []):
+			known[int(faction_id_key)] = int(headquarters_data.get('system_id', -1))
+	return known
 
 func _calculate_maintenance() -> void:
 	var factions: Array = getData('faction_data')
@@ -205,7 +238,7 @@ func _count_buildings(buildings: Array, building_id: int) -> int:
 			count += 1
 	return count
 
-func _seed_buildings(system: Dictionary) -> Array:
+func _seed_buildings(system: Dictionary, ensure_construction := false) -> Array:
 	var system_id := int(system.get('id', 0))
 	var config := GalaxyData.economy(_difficulty)
 	var rng := RandomNumberGenerator.new()
@@ -226,8 +259,23 @@ func _seed_buildings(system: Dictionary) -> Array:
 		buildings.append(MINE_ID)
 	for i in range(mini(refinery_target, int(energy_slots['total']))):
 		buildings.append(REFINERY_ID)
+	if bool(system.get('explored', false)):
+		if rng.randf() < INHABITED_FACILITY_CHANCE and buildings.size() < int(energy_slots['total']):
+			buildings.append(CONSTRUCTION_YARD_ID)
+		if rng.randf() < INHABITED_FACILITY_CHANCE and buildings.size() < int(energy_slots['total']):
+			buildings.append(SHIPYARD_ID)
+		if rng.randf() < INHABITED_FACILITY_CHANCE and buildings.size() < int(energy_slots['total']):
+			buildings.append(BASIC_TRAINING_ID)
+	if ensure_construction:
+		if buildings.size() >= int(energy_slots['total']):
+			for index in range(buildings.size() - 1, -1, -1):
+				if int(buildings[index]) != MINE_ID:
+					buildings.remove_at(index)
+					break
+		if buildings.size() < int(energy_slots['total']):
+			buildings.append(CONSTRUCTION_YARD_ID)
 	resource_slots['used'] = _count_buildings(buildings, MINE_ID)
-	energy_slots['used'] = _count_buildings(buildings, REFINERY_ID)
+	energy_slots['used'] = buildings.size() - resource_slots['used']
 	system['buildings'] = buildings
 	return buildings
 
