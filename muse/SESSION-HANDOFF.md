@@ -33,3 +33,24 @@
 - Headless validation and visual QA were completed; screenshots were reviewed for readability in `ReRebel/screenshots/`.
 - Theme values were pinned and verified for the current prototype; `ICON_ROOM=12` margin and `0.75` spread floor remain the only hard-coded constants outside the theme file.
 - Pan/zoom remains intentionally parked (`ENABLE_PAN_ZOOM=false`), matching the final clean-room placeholder state; placeholder tags and procedural art are accepted as-is for this handoff.
+
+## Latest manufacturing overlay handoff — 2026-09-16
+- Status: `COMPLETE` for the current manufacturing overlay pass.
+- The manufacturing overlay opens by double-clicking a manufacturing icon on a sector mini-map.
+- Overlay tabs are icon-only: landing assignments, construction, shipyards, and troop training.
+- The landing tab keeps the fixed prototype size of 360×260 pixels.
+- The overlay is draggable by its header/title area. Dragging uses the card's global position and is isolated from galaxy-map panning and system selection.
+- The landing tab contains fleet, troop-training, and construction assignment rows with facility counts, item previews, and progress bars.
+- The three detail tabs show one repeated facility icon per available building:
+  - Construction yards use `res://art/factory.png`.
+  - Shipyards use `res://art/dart_flight.png`.
+  - Training facilities use `res://art/ground_base.svg`.
+- Detail tabs retain their being-built and in-transit status lines.
+- Relevant implementation files:
+  - `game/galaxy/galaxy_map.gd`
+  - `game/galaxy/galaxy_map.tscn`
+  - `game/galaxy/sector_mini_map.gd`
+  - `game/galaxy/system_card.gd`
+  - `game/galaxy/system_card.tscn`
+- Validation completed with Godot headless scene startup, diagnostics, and `git diff --check`.
+- Latest commit contains the accumulated manufacturing overlay work and HQ political-share correction. Continue from the pushed `fork/godot` branch; do not assume the overlay is a separate uncommitted change.

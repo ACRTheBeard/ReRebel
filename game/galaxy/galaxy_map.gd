@@ -36,12 +36,19 @@ var _press_pos := Vector2.ZERO
 var _theme: Dictionary = {}
 var _day := 0.0
 var _shown_day := -1
+var _overlay_dragging := false
+var _overlay_drag_offset := Vector2.ZERO
 var _speed := 2
 var _speed_names := PackedStringArray()
 var _day_lengths := PackedFloat32Array()
 var _map_filter := 0
 
 const CARD_SCENE := preload("res://galaxy/system_card.tscn")
+const ALLIANCE_EMBLEM := preload("res://art/alliance_emblem.png")
+const EMPIRE_EMBLEM := preload("res://art/empire_emblem.png")
+const FACTORY_ICON := preload("res://art/factory.png")
+const FLEET_ICON := preload("res://art/dart_flight.png")
+const GROUND_BASE_ICON := preload("res://art/ground_base.svg")
 const PIP_SLOTS := 2
 
 var _cards: Array = []
@@ -60,6 +67,33 @@ var _game_data: GameData
 @onready var _maintenance_label: Label = %Maintenance
 @onready var _speed_button: OptionButton = %SpeedButton
 @onready var _pip_grid: Control = %PiPGrid
+@onready var _manufacturing_card: PanelContainer = %ManufacturingCard
+@onready var _manufacturing_title: Label = %Title
+@onready var _manufacturing_header: Control = $UI/ManufacturingCard/Margin/Column/HeaderRow
+@onready var _manufacturing_close: Button = $UI/ManufacturingCard/Margin/Column/HeaderRow/CloseButton
+@onready var _manufacturing_tabs: TabContainer = %ManufacturingTabs
+@onready var _fleet_box: PanelContainer = %FleetBox
+@onready var _troop_box: PanelContainer = %TroopBox
+@onready var _construction_box: PanelContainer = %ConstructionBox
+@onready var _assignment_status: Label = %AssignmentStatus
+@onready var _fleet_available: Label = %FleetAvailable
+@onready var _fleet_preview: TextureRect = %FleetPreview
+@onready var _fleet_progress: ProgressBar = %FleetProgress
+@onready var _troop_available: Label = %TroopAvailable
+@onready var _troop_preview: TextureRect = %TroopPreview
+@onready var _troop_progress: ProgressBar = %TroopProgress
+@onready var _construction_available: Label = %ConstructionAvailable
+@onready var _construction_preview: TextureRect = %ConstructionPreview
+@onready var _construction_progress: ProgressBar = %ConstructionProgress
+@onready var _construction_existing: HBoxContainer = %ConstructionExisting
+@onready var _construction_building: Label = %ConstructionBuilding
+@onready var _construction_transit: Label = %ConstructionTransit
+@onready var _shipyard_existing: HBoxContainer = %ShipyardExisting
+@onready var _shipyard_building: Label = %ShipyardBuilding
+@onready var _shipyard_transit: Label = %ShipyardTransit
+@onready var _training_existing: HBoxContainer = %TrainingExisting
+@onready var _training_building: Label = %TrainingBuilding
+@onready var _training_transit: Label = %TrainingTransit
 @onready var _side_panel: PanelContainer = %Panel
 @onready var _top_bar: PanelContainer = $UI/TopBar
 @onready var _filter_button: OptionButton = %MapFilterButton
@@ -71,6 +105,8 @@ func _ready() -> void:
 	_theme = GalaxyData.colors()
 	_apply_faction_top_bar_theme()
 	_apply_theme()
+	_setup_manufacturing_tabs()
+	_theme_manufacturing_overlay()
 	_sectors = GalaxyData.sectors_for_size(GalaxyData.load_sectors(), settings["size"])
 	_systems = GalaxyData.systems_for_sectors(GalaxyData.load_systems(), _sectors)
 	_game_data = GameData.new(_side, [], _systems, int(settings["difficulty"]))
@@ -83,6 +119,54 @@ func _ready() -> void:
 	if not _sectors.is_empty():
 		select_sector(_sectors[0]["id"])
 	_refresh_resource_labels()
+
+
+func _setup_manufacturing_tabs() -> void:
+	var landing_icon := ALLIANCE_EMBLEM if _side == GameData.ALLIANCE_SIDE else EMPIRE_EMBLEM
+	var icons := [
+		_compact_tab_icon(landing_icon),
+		_compact_tab_icon(FACTORY_ICON),
+		_compact_tab_icon(FLEET_ICON),
+		_compact_tab_icon(GROUND_BASE_ICON),
+	]
+	var tooltips := ["Landing: production assignments", "Construction yards", "Shipyards", "Troop training"]
+	for index in range(icons.size()):
+		_manufacturing_tabs.set_tab_title(index, "")
+		_manufacturing_tabs.set_tab_icon(index, icons[index])
+		_manufacturing_tabs.set_tab_tooltip(index, tooltips[index])
+
+
+func _compact_tab_icon(source: Texture2D) -> Texture2D:
+	var image := source.get_image()
+	image.resize(16, 16, Image.INTERPOLATE_LANCZOS)
+	return ImageTexture.create_from_image(image)
+
+
+func _theme_manufacturing_overlay() -> void:
+	var accent := _faction_accent()
+	var bright := accent.lerp(Color.WHITE, 0.3)
+	var overlay := _top_bar_style(Color(0.025, 0.045, 0.09, 0.98), accent, 8)
+	overlay.shadow_color = Color(0, 0, 0, 0.65)
+	overlay.shadow_size = 12
+	overlay.shadow_offset = Vector2(0, 4)
+	_manufacturing_card.add_theme_stylebox_override("panel", overlay)
+	_manufacturing_tabs.add_theme_stylebox_override("tab_selected", _top_bar_style(accent.darkened(0.58), bright, 4))
+	_manufacturing_tabs.add_theme_stylebox_override("tab_unselected", _top_bar_style(Color(0.04, 0.075, 0.12, 0.95), accent.darkened(0.4), 4))
+	_manufacturing_tabs.add_theme_stylebox_override("tab_hovered", _top_bar_style(accent.darkened(0.72), bright, 4))
+	for box in [_fleet_box, _troop_box, _construction_box]:
+		var order_style := _top_bar_style(Color(0.02, 0.035, 0.065, 0.98), accent.darkened(0.42), 5)
+		order_style.content_margin_left = 6.0
+		order_style.content_margin_top = 6.0
+		order_style.content_margin_right = 6.0
+		order_style.content_margin_bottom = 4.0
+		box.add_theme_stylebox_override("panel", order_style)
+	for progress in [_fleet_progress, _troop_progress, _construction_progress]:
+		var track := _top_bar_style(Color(0.08, 0.11, 0.16, 1.0), Color(0.12, 0.18, 0.25, 1.0), 3)
+		var fill := _top_bar_style(accent.darkened(0.12), bright, 3)
+		progress.add_theme_stylebox_override("background", track)
+		progress.add_theme_stylebox_override("fill", fill)
+	for label in [_assignment_status, _fleet_available, _troop_available, _construction_available]:
+		label.add_theme_color_override("font_color", bright)
 	
 
 func _apply_theme() -> void:
@@ -201,6 +285,7 @@ func _spawn_cards() -> void:
 		card.visible = false
 		card.closed.connect(_refresh_open_indicators)
 		card.focus_changed.connect(_refresh_open_indicators)
+		card.manufacturing_requested.connect(_show_manufacturing_card)
 		_pip_grid.add_child(card)
 		_cards.append(card)
 
@@ -243,6 +328,109 @@ func _hide_all_cards() -> void:
 	for card in _cards:
 		(card as PanelContainer).visible = false
 	_refresh_open_indicators()
+
+
+func _show_manufacturing_card(system_id: int) -> void:
+	var system := _system_by_id(system_id)
+	if system.is_empty():
+		return
+	var buildings: Array = system.get("buildings", [])
+	_manufacturing_title.text = "%s Manufacturing" % str(system.get("tag", "System"))
+	var construction_count := _building_count(GameData.CONSTRUCTION_YARD_ID, buildings)
+	var shipyard_count := _building_count(GameData.SHIPYARD_ID, buildings)
+	var training_count := _building_count(GameData.BASIC_TRAINING_ID, buildings)
+	_assignment_status.text = "Select a production tab to assign construction, ship, or troop training orders."
+	_update_order_row(_fleet_available, _fleet_preview, _fleet_progress, shipyard_count, FLEET_ICON)
+	_update_order_row(_troop_available, _troop_preview, _troop_progress, training_count, GROUND_BASE_ICON)
+	_update_order_row(_construction_available, _construction_preview, _construction_progress, construction_count, FACTORY_ICON)
+	_set_facility_icons(_construction_existing, construction_count, FACTORY_ICON)
+	_construction_building.text = "Being built: %s" % _queue_status(system, "construction")
+	_construction_transit.text = "In transit: %s" % _queue_status(system, "construction_transit")
+	_set_facility_icons(_shipyard_existing, shipyard_count, FLEET_ICON)
+	_shipyard_building.text = "Being built: %s" % _queue_status(system, "ship")
+	_shipyard_transit.text = "In transit: %s" % _queue_status(system, "ship_transit")
+	_set_facility_icons(_training_existing, training_count, GROUND_BASE_ICON)
+	_training_building.text = "Being built: %s" % _queue_status(system, "training")
+	_training_transit.text = "In transit: %s" % _queue_status(system, "training_transit")
+	_manufacturing_tabs.current_tab = 0
+	_manufacturing_card.size = Vector2(360, 260)
+	_manufacturing_card.visible = true
+
+
+func _set_facility_icons(container: HBoxContainer, count: int, icon: Texture2D) -> void:
+	for child in container.get_children():
+		child.queue_free()
+	for index in range(count):
+		var icon_node := TextureRect.new()
+		icon_node.custom_minimum_size = Vector2(28, 28)
+		icon_node.texture = icon
+		icon_node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_node.tooltip_text = "Available facility %d" % (index + 1)
+		container.add_child(icon_node)
+
+
+func _update_order_row(
+	count_label: Label,
+	preview: TextureRect,
+	progress: ProgressBar,
+	available: int,
+	item_icon: Texture2D
+) -> void:
+	count_label.text = str(available)
+	preview.texture = item_icon
+	progress.value = 0.0
+
+
+func _building_count(building_id: int, buildings: Array) -> int:
+	var count := 0
+	for value in buildings:
+		if int(value) == building_id:
+			count += 1
+	return count
+
+
+func _queue_status(system: Dictionary, key: String) -> String:
+	var value: Variant = system.get(key, [])
+	if value is Array and not (value as Array).is_empty():
+		return str(value)
+	if value is String and not str(value).is_empty():
+		return str(value)
+	return "None"
+
+
+func _system_by_id(system_id: int) -> Dictionary:
+	for system in _systems:
+		if int(system.get("id", -1)) == system_id:
+			return system
+	return {}
+
+
+func _on_manufacturing_close_pressed() -> void:
+	_manufacturing_card.visible = false
+
+
+func _input(event: InputEvent) -> void:
+	if not _manufacturing_card.visible:
+		return
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if mouse_button.pressed:
+			if _manufacturing_close.get_global_rect().has_point(mouse_button.position):
+				return
+			if _manufacturing_header.get_global_rect().has_point(mouse_button.position):
+				_overlay_dragging = true
+				_overlay_drag_offset = mouse_button.position - _manufacturing_card.global_position
+				get_viewport().set_input_as_handled()
+		elif _overlay_dragging:
+			_overlay_dragging = false
+			get_viewport().set_input_as_handled()
+	elif event is InputEventMouseMotion and _overlay_dragging:
+		var motion := event as InputEventMouseMotion
+		_manufacturing_card.global_position = motion.position - _overlay_drag_offset
+		get_viewport().set_input_as_handled()
 
 
 func _systems_in_sector(sector_id: int) -> Array:

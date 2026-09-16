@@ -13,6 +13,7 @@ extends Control
 ## themed neutral share so neither side gains them by luck.
 
 signal system_picked(system_id: int)
+signal manufacturing_requested(system_id: int)
 
 ## Breathing room kept between neighboring systems for icons and bars.
 const ICON_ROOM := 12.0
@@ -283,9 +284,24 @@ func system_at(point: Vector2) -> int:
 	return best
 
 
+func manufacturing_at(point: Vector2) -> int:
+	var dots := layout()
+	for id in dots:
+		var deco := decor(dots[id], int(id))
+		for icon in deco["icons"]:
+			if int(icon["kind"]) == 2 and (icon["pos"] as Vector2).distance_to(point) <= _icon_size * 1.8:
+				return int(id)
+	return -1
+
+
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed and mb.double_click:
+			var manufacturing_id := manufacturing_at(mb.position)
+			if manufacturing_id >= 0:
+				manufacturing_requested.emit(manufacturing_id)
+				return
 		if mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed:
 			var id := system_at(mb.position)
 			if id >= 0:

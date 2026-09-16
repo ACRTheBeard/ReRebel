@@ -131,7 +131,7 @@ func _set_headquarters_system(system_id: int, faction_id: int) -> void:
 		var economy: Dictionary = system.get('economy', {})
 		economy['raw'] = _count_buildings(buildings, MINE_ID)
 		economy['refined'] = mini(economy['raw'], _count_buildings(buildings, REFINERY_ID))
-		economy['political_share'] = 1.0 if faction_id == ALLIANCE_SIDE else 0.0
+		economy['political_share'] = 1.0 if faction_id == int(getData('side')) else 0.0
 		system['economy'] = economy
 		return
 

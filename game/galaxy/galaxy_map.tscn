@@ -3,6 +3,9 @@
 [ext_resource type="Script" uid="uid://bgafmxqq4lu2g" path="res://galaxy/galaxy_map.gd" id="1_map"]
 [ext_resource type="Script" uid="uid://j6kbhjk1eu30" path="res://galaxy/starfield.gd" id="2_field"]
 [ext_resource type="Theme" path="res://theme/top_bar.tres" id="3_topbar"]
+[ext_resource type="Texture2D" path="res://art/dart_flight.png" id="4_fleet"]
+[ext_resource type="Texture2D" path="res://art/ground_base.svg" id="5_ground"]
+[ext_resource type="Texture2D" path="res://art/factory.png" id="6_factory"]
 
 [node name="GalaxyMap" type="Node2D" unique_id=21475926]
 script = ExtResource("1_map")
@@ -92,6 +95,264 @@ anchor_bottom = 1.0
 offset_left = -364.0
 grow_horizontal = 0
 
+[node name="ManufacturingCard" type="PanelContainer" parent="UI" unique_id=1928847353]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(360, 260)
+mouse_filter = 0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -130.0
+offset_right = 180.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/ManufacturingCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Column" type="VBoxContainer" parent="UI/ManufacturingCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="UI/ManufacturingCard/Margin/Column"]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="Title" type="Label" parent="UI/ManufacturingCard/Margin/Column/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Manufacturing"
+
+[node name="CloseButton" type="Button" parent="UI/ManufacturingCard/Margin/Column/HeaderRow"]
+layout_mode = 2
+text = "x"
+
+[node name="ManufacturingTabs" type="TabContainer" parent="UI/ManufacturingCard/Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 190)
+size_flags_vertical = 3
+theme_override_constants/side_margin = 2
+theme_override_constants/h_separation = 2
+
+[node name="Assignments" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs"]
+layout_mode = 2
+theme_override_constants/separation = 6
+metadata/_tab_name = "Assignments"
+
+[node name="AssignmentStatus" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Production assignments"
+
+[node name="FleetOrder" type="HBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FleetFacility" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/FleetOrder"]
+custom_minimum_size = Vector2(42, 48)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="FleetIcon" type="TextureRect" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/FleetOrder/FleetFacility"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+texture = ExtResource("4_fleet")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FleetAvailable" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/FleetOrder/FleetFacility"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+
+[node name="FleetBox" type="PanelContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/FleetOrder"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Column" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/FleetOrder/FleetBox"]
+layout_mode = 2
+
+[node name="FleetPreview" type="TextureRect" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/FleetOrder/FleetBox/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("4_fleet")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FleetProgress" type="ProgressBar" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/FleetOrder/FleetBox/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+show_percentage = false
+
+[node name="TroopOrder" type="HBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TroopFacility" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/TroopOrder"]
+custom_minimum_size = Vector2(42, 48)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TroopIcon" type="TextureRect" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/TroopOrder/TroopFacility"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+texture = ExtResource("5_ground")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TroopAvailable" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/TroopOrder/TroopFacility"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+
+[node name="TroopBox" type="PanelContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/TroopOrder"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Column" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/TroopOrder/TroopBox"]
+layout_mode = 2
+
+[node name="TroopPreview" type="TextureRect" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/TroopOrder/TroopBox/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("5_ground")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TroopProgress" type="ProgressBar" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/TroopOrder/TroopBox/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+show_percentage = false
+
+[node name="ConstructionOrder" type="HBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ConstructionFacility" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/ConstructionOrder"]
+custom_minimum_size = Vector2(42, 48)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ConstructionIcon" type="TextureRect" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/ConstructionOrder/ConstructionFacility"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+texture = ExtResource("6_factory")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ConstructionAvailable" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/ConstructionOrder/ConstructionFacility"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+
+[node name="ConstructionBox" type="PanelContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/ConstructionOrder"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Column" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/ConstructionOrder/ConstructionBox"]
+layout_mode = 2
+
+[node name="ConstructionPreview" type="TextureRect" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/ConstructionOrder/ConstructionBox/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("6_factory")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ConstructionProgress" type="ProgressBar" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Assignments/ConstructionOrder/ConstructionBox/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+show_percentage = false
+
+[node name="Construction" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs"]
+layout_mode = 2
+theme_override_constants/separation = 8
+metadata/_tab_name = "Construction"
+
+[node name="ConstructionExisting" type="HBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Construction"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ConstructionBuilding" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Construction"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Being built: None"
+
+[node name="ConstructionTransit" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Construction"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "In transit: None"
+
+[node name="Shipyards" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs"]
+layout_mode = 2
+theme_override_constants/separation = 8
+metadata/_tab_name = "Shipyards"
+
+[node name="ShipyardExisting" type="HBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Shipyards"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ShipyardBuilding" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Shipyards"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Being built: None"
+
+[node name="ShipyardTransit" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/Shipyards"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "In transit: None"
+
+[node name="TroopTraining" type="VBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs"]
+layout_mode = 2
+theme_override_constants/separation = 8
+metadata/_tab_name = "Troop Training"
+
+[node name="TrainingExisting" type="HBoxContainer" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/TroopTraining"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TrainingBuilding" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/TroopTraining"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Being built: None"
+
+[node name="TrainingTransit" type="Label" parent="UI/ManufacturingCard/Margin/Column/ManufacturingTabs/TroopTraining"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "In transit: None"
+
 [node name="Margin" type="MarginContainer" parent="UI/Panel" unique_id=1276227711]
 layout_mode = 2
 theme_override_constants/margin_left = 16
@@ -126,3 +387,4 @@ size_flags_vertical = 3
 [connection signal="item_selected" from="UI/TopBar/Content/MapFilterButton" to="." method="_on_map_filter_selected"]
 [connection signal="item_selected" from="UI/TopBar/Content/SpeedButton" to="." method="_on_speed_selected"]
 [connection signal="item_selected" from="UI/Panel/Margin/Column/SectorButton" to="." method="_on_sector_selected"]
+[connection signal="pressed" from="UI/ManufacturingCard/Margin/Column/HeaderRow/CloseButton" to="." method="_on_manufacturing_close_pressed"]

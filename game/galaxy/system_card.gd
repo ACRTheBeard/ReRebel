@@ -7,6 +7,7 @@ extends PanelContainer
 
 signal closed
 signal focus_changed
+signal manufacturing_requested(system_id: int)
 
 var focused_id := -1
 var sector_id := -1
@@ -50,6 +51,10 @@ func _on_mini_picked(system_id: int) -> void:
 		if int(s["id"]) == system_id:
 			focus_system(s)
 			return
+
+
+func _on_mini_manufacturing_requested(system_id: int) -> void:
+	manufacturing_requested.emit(system_id)
 
 
 func _on_close_pressed() -> void:

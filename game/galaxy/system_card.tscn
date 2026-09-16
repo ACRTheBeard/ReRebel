@@ -40,4 +40,5 @@ mouse_filter = 0
 script = ExtResource("2_mini")
 
 [connection signal="system_picked" from="Margin/Column/SectorMap" to="." method="_on_mini_picked"]
+[connection signal="manufacturing_requested" from="Margin/Column/SectorMap" to="." method="_on_mini_manufacturing_requested"]
 [connection signal="pressed" from="Margin/Column/HeaderRow/CloseButton" to="." method="_on_close_pressed"]
