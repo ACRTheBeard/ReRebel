@@ -1,97 +1,111 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://c5qm6doyd1jkp"]
 
-[ext_resource type="Script" path="res://galaxy/galaxy_map.gd" id="1_map"]
-[ext_resource type="Script" path="res://galaxy/starfield.gd" id="2_field"]
+[ext_resource type="Script" uid="uid://bgafmxqq4lu2g" path="res://galaxy/galaxy_map.gd" id="1_map"]
+[ext_resource type="Script" uid="uid://j6kbhjk1eu30" path="res://galaxy/starfield.gd" id="2_field"]
 
-[node name="GalaxyMap" type="Node2D"]
+[node name="GalaxyMap" type="Node2D" unique_id=21475926]
 script = ExtResource("1_map")
 
-[node name="Backdrop" type="CanvasLayer" parent="."]
+[node name="Backdrop" type="CanvasLayer" parent="." unique_id=333834939]
 layer = -1
 
-[node name="Background" type="ColorRect" parent="./Backdrop"]
-mouse_filter = 2
+[node name="Background" type="ColorRect" parent="Backdrop" unique_id=1261569245]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 color = Color(0.02, 0.03, 0.06, 1)
 
-[node name="Starfield" type="Node2D" parent="./Backdrop"]
+[node name="Starfield" type="Node2D" parent="Backdrop" unique_id=403095478]
 script = ExtResource("2_field")
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=494572540]
 
-[node name="TopBar" type="HBoxContainer" parent="./UI"]
-offsets_preset = 10
+[node name="TopBar" type="HBoxContainer" parent="UI" unique_id=115719667]
 offset_left = 16.0
 offset_top = 12.0
 offset_right = 884.0
 offset_bottom = 52.0
 theme_override_constants/separation = 16
 
-[node name="MenuButton" type="Button" parent="./UI/TopBar"]
+[node name="MenuButton" type="Button" parent="UI/TopBar" unique_id=711423605]
 layout_mode = 2
 text = "Menu"
 
-[node name="DayLabel" type="Label" parent="./UI/TopBar"]
+[node name="DayLabel" type="Label" parent="UI/TopBar" unique_id=250614096]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Day 0"
 vertical_alignment = 1
 
-[node name="SpeedButton" type="OptionButton" parent="./UI/TopBar"]
+[node name="Raw" type="Label" parent="UI/TopBar" unique_id=965785164]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Raw 0"
+vertical_alignment = 1
+
+[node name="Refined" type="Label" parent="UI/TopBar" unique_id=727198984]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Refined 0"
+vertical_alignment = 1
+
+[node name="SpeedButton" type="OptionButton" parent="UI/TopBar" unique_id=1191362047]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="PiPGrid" type="Control" parent="./UI"]
+[node name="PiPGrid" type="Control" parent="UI" unique_id=64513944]
 unique_name_in_owner = true
-mouse_filter = 2
+layout_mode = 3
+anchors_preset = 0
 offset_right = 900.0
 offset_bottom = 720.0
+mouse_filter = 2
 
-[node name="Panel" type="PanelContainer" parent="./UI"]
+[node name="Panel" type="PanelContainer" parent="UI" unique_id=1928847352]
 unique_name_in_owner = true
-anchors_preset = 2
+anchors_preset = 11
 anchor_left = 1.0
-anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -364.0
 grow_horizontal = 0
 
-[node name="Margin" type="MarginContainer" parent="./UI/Panel"]
+[node name="Margin" type="MarginContainer" parent="UI/Panel" unique_id=1276227711]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="Column" type="VBoxContainer" parent="./UI/Panel/Margin"]
+[node name="Column" type="VBoxContainer" parent="UI/Panel/Margin" unique_id=1822477290]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="SectorPickerLabel" type="Label" parent="./UI/Panel/Margin/Column"]
+[node name="SectorPickerLabel" type="Label" parent="UI/Panel/Margin/Column" unique_id=1469941740]
 layout_mode = 2
 text = "Sector"
 
-[node name="SectorButton" type="OptionButton" parent="./UI/Panel/Margin/Column"]
+[node name="SectorButton" type="OptionButton" parent="UI/Panel/Margin/Column" unique_id=1297689142]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="SectorLabel" type="Label" parent="./UI/Panel/Margin/Column"]
+[node name="SectorLabel" type="Label" parent="UI/Panel/Margin/Column" unique_id=1359802507]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Sector"
 
-[node name="SystemList" type="ItemList" parent="./UI/Panel/Margin/Column"]
+[node name="SystemList" type="ItemList" parent="UI/Panel/Margin/Column" unique_id=318500420]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
 [connection signal="pressed" from="UI/TopBar/MenuButton" to="." method="_on_menu_pressed"]
-[connection signal="item_selected" from="UI/Panel/Margin/Column/SectorButton" to="." method="_on_sector_selected"]
 [connection signal="item_selected" from="UI/TopBar/SpeedButton" to="." method="_on_speed_selected"]
+[connection signal="item_selected" from="UI/Panel/Margin/Column/SectorButton" to="." method="_on_sector_selected"]

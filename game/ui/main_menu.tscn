@@ -1,17 +1,17 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bjxgdfcr8wfmf"]
 
-[ext_resource type="Script" path="res://ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Script" uid="uid://bd33x0je3x5n0" path="res://ui/main_menu.gd" id="1_menu"]
 
-[node name="MainMenu" type="Control"]
-script = ExtResource("1_menu")
+[node name="MainMenu" type="Control" unique_id=1108205895]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_menu")
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="CenterContainer" parent="." unique_id=185935629]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,91 +19,91 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Menu" type="VBoxContainer" parent="./Center"]
+[node name="Menu" type="VBoxContainer" parent="Center" unique_id=67444508]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Title" type="Label" parent="./Center/Menu"]
+[node name="Title" type="Label" parent="Center/Menu" unique_id=337681604]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 84
 text = "REREBEL"
 horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="./Center/Menu"]
+[node name="Subtitle" type="Label" parent="Center/Menu" unique_id=1436377651]
 layout_mode = 2
 text = "Clean-room remake — vertical slice"
 horizontal_alignment = 1
 
-[node name="SideRow" type="HBoxContainer" parent="./Center/Menu"]
+[node name="SideRow" type="HBoxContainer" parent="Center/Menu" unique_id=352065511]
 layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="SideLabel" type="Label" parent="./Center/Menu/SideRow"]
+[node name="SideLabel" type="Label" parent="Center/Menu/SideRow" unique_id=2034062560]
 layout_mode = 2
 text = "Side"
 
-[node name="SideButton" type="OptionButton" parent="./Center/Menu/SideRow"]
+[node name="SideButton" type="OptionButton" parent="Center/Menu/SideRow" unique_id=670707169]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
-[node name="GalaxyRow" type="HBoxContainer" parent="./Center/Menu"]
+[node name="GalaxyRow" type="HBoxContainer" parent="Center/Menu" unique_id=1785105046]
 layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="GalaxyLabel" type="Label" parent="./Center/Menu/GalaxyRow"]
+[node name="GalaxyLabel" type="Label" parent="Center/Menu/GalaxyRow" unique_id=889334767]
 layout_mode = 2
 text = "Galaxy Size"
 
-[node name="GalaxySizeButton" type="OptionButton" parent="./Center/Menu/GalaxyRow"]
+[node name="GalaxySizeButton" type="OptionButton" parent="Center/Menu/GalaxyRow" unique_id=250375591]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
-[node name="DifficultyRow" type="HBoxContainer" parent="./Center/Menu"]
+[node name="DifficultyRow" type="HBoxContainer" parent="Center/Menu" unique_id=1484900083]
 layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="DifficultyLabel" type="Label" parent="./Center/Menu/DifficultyRow"]
+[node name="DifficultyLabel" type="Label" parent="Center/Menu/DifficultyRow" unique_id=800901599]
 layout_mode = 2
 text = "Difficulty"
 
-[node name="DifficultyButton" type="OptionButton" parent="./Center/Menu/DifficultyRow"]
+[node name="DifficultyButton" type="OptionButton" parent="Center/Menu/DifficultyRow" unique_id=2077649694]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
-[node name="StartButton" type="Button" parent="./Center/Menu"]
+[node name="StartButton" type="Button" parent="Center/Menu" unique_id=1998474279]
 custom_minimum_size = Vector2(300, 52)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Start"
 
-[node name="AboutButton" type="Button" parent="./Center/Menu"]
+[node name="AboutButton" type="Button" parent="Center/Menu" unique_id=1930296170]
 custom_minimum_size = Vector2(300, 52)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "About"
 
-[node name="ExitButton" type="Button" parent="./Center/Menu"]
+[node name="ExitButton" type="Button" parent="Center/Menu" unique_id=1728281827]
 custom_minimum_size = Vector2(300, 52)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Exit"
 
-[node name="AboutDialog" type="AcceptDialog" parent="."]
+[node name="AboutDialog" type="AcceptDialog" parent="." unique_id=2059223301]
 unique_name_in_owner = true
 title = "About ReRebel"
 dialog_text = "ReRebel is a clean-room remake built for parity research. No original assets ship with this project."
 
-[connection signal="pressed" from="Center/Menu/StartButton" to="." method="_on_start_pressed"]
-[connection signal="pressed" from="Center/Menu/AboutButton" to="." method="_on_about_pressed"]
-[connection signal="pressed" from="Center/Menu/ExitButton" to="." method="_on_exit_pressed"]
 [connection signal="item_selected" from="Center/Menu/SideRow/SideButton" to="." method="_on_side_selected"]
 [connection signal="item_selected" from="Center/Menu/GalaxyRow/GalaxySizeButton" to="." method="_on_galaxy_size_selected"]
 [connection signal="item_selected" from="Center/Menu/DifficultyRow/DifficultyButton" to="." method="_on_difficulty_selected"]
+[connection signal="pressed" from="Center/Menu/StartButton" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="Center/Menu/AboutButton" to="." method="_on_about_pressed"]
+[connection signal="pressed" from="Center/Menu/ExitButton" to="." method="_on_exit_pressed"]

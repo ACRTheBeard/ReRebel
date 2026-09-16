@@ -42,11 +42,15 @@ const DEFAULT_LAYOUT := {
 	"mini_pad": 20.0,
 	"icon_dist": 20.0,
 	"icon_size": 4.0,
-	"bar_width": 24.0,
-	"bar_height": 3.0,
+	"bar_width": 220.0,
+	"bar_height": 5.0,
 	"bar_gap": 3.0,
-	"energy_max_slots": 6.0,
-	"resource_max_slots": 6.0,
+	"slot_width": 10.0,
+	"slot_separator": 5.0,
+	"energy_min_available": 3.0,
+	"energy_max_slots": 15.0,
+	"resource_min_available": 2.0,
+	"resource_max_slots": 15.0,
 	"panel_width": 364.0,
 	"pip_origin": Vector2(16, 64),
 	"pip_size": Vector2(442, 640),
@@ -69,6 +73,32 @@ const DEFAULT_TIME := {
 	"speed_names": ["Very Slow", "Slow", "Normal", "Fast"],
 	"day_lengths": [8.0, 4.0, 2.0, 0.5],
 }
+
+const DEFAULT_POLITICS := {
+	"ownership_threshold": 0.65,
+	"neutral_share": 0.5,
+}
+
+const DEFAULT_ECONOMY := [
+	{
+		"major_min_mines": 3, "major_max_mines": 6,
+		"major_min_refineries": 2, "major_max_refineries": 4,
+		"uncharted_seed_chance": 0.35,
+		"uncharted_max_mines": 1, "uncharted_max_refineries": 1,
+	},
+	{
+		"major_min_mines": 2, "major_max_mines": 5,
+		"major_min_refineries": 1, "major_max_refineries": 3,
+		"uncharted_seed_chance": 0.20,
+		"uncharted_max_mines": 1, "uncharted_max_refineries": 1,
+	},
+	{
+		"major_min_mines": 1, "major_max_mines": 4,
+		"major_min_refineries": 1, "major_max_refineries": 2,
+		"uncharted_seed_chance": 0.10,
+		"uncharted_max_mines": 1, "uncharted_max_refineries": 1,
+	},
+]
 
 const DEFAULT_FACTIONS: PackedStringArray = ["Alliance", "Empire"]
 const SIZES: PackedStringArray = ["Standard", "Large", "Huge"]
@@ -143,6 +173,15 @@ static func layout() -> Dictionary:
 
 static func fonts() -> Dictionary:
 	return _section("fonts", DEFAULT_FONTS)
+
+
+static func politics() -> Dictionary:
+	return _section("politics", DEFAULT_POLITICS)
+
+static func economy(difficulty: int) -> Dictionary:
+	var index := clampi(difficulty, 0, DEFAULT_ECONOMY.size() - 1)
+	var names := ["novice", "intermediate", "expert"]
+	return _section("economy_%s" % names[index], DEFAULT_ECONOMY[index])
 
 
 const DEFAULT_BACKDROP := {

@@ -1,0 +1,94 @@
+{
+    "Mon Mothma": {
+        "faction": "Alliance",
+        "diplomacy": 100,
+        "combat": 20,
+        "espionage": 30,
+        "leadership": 130,
+        "type": "critical",
+        "High Command": true
+    },
+    "Luke Skywalker": {
+        "faction": "Alliance",
+        "diplomacy": 70,
+        "combat": 70,
+        "espionage": 80,
+        "leadership": 80,
+        "type": "critical",
+        "jedi": true,
+        "jedi rank": "trainee"   
+    },
+    "Leia Organa": {
+        "name": "Leia Organa",
+        "faction": "Alliance",
+        "diplomacy": 100,
+        "combat": 60,
+        "espionage": 50,
+        "leadership": 130,
+        "type": "critical",
+        "jedi": true,
+        "jedi rank": "undiscovered"
+    },
+    "Han Solo": {
+        "faction": "Alliance",
+        "diplomacy": 30,
+        "combat": 90,
+        "espionage": 80,
+        "leadership": 80,
+        "type": "major",
+        "millennium falcon": true
+    },
+    "Chewbacca": {
+        "faction": "Alliance",
+        "diplomacy": 20,
+        "combat": 90,
+        "espionage": 50,
+        "leadership": 60,
+        "type": "major"
+    },
+    "Darth Vader": {
+        "faction": "Empire",
+        "diplomacy": 120,
+        "combat": 100,
+        "espionage": 80,
+        "leadership": 130,
+        "type": "critical",
+        "jedi": true,
+        "jedi rank": "master"
+    }, 
+    "Emperor Palpatine": {
+        "faction": "Empire",
+        "diplomacy": 130,
+        "combat": 100,
+        "espionage": 100,
+        "leadership": 150,
+        "type": "critical",
+        "jedi": true,
+        "jedi rank": "master",
+        "throne room": true
+    },
+    "Admiral Piett": {
+        "faction": "Empire",
+        "diplomacy": 80,
+        "combat": 70,
+        "espionage": 60,
+        "leadership": 90,
+        "type": "major"
+    },
+    "Admiral Ozzel": {
+        "faction": "Empire",
+        "diplomacy": 30,
+        "combat": 70,
+        "espionage": 50,
+        "leadership": 80,
+        "type": "minor"
+    },
+    "Moff Jerjerrod": {
+        "faction": "Empire",
+        "diplomacy": 80,
+        "combat": 50,
+        "espionage": 40,
+        "leadership": 90,
+        "type": "minor"
+    }
+}

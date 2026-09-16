@@ -1,0 +1,92 @@
+{
+    "Diplomat": {
+        "name": "Diplomat",
+        "description": "The Diplomat is a master of negotiation and alliance-building. They excel in forming strategic partnerships and can sway other factions to their cause.",
+        "diplomacy": 30,
+        "combat": 5,
+        "espionage": 5,
+        "leadership": 30,
+        "missions": ["Diplomacy"]      
+    },
+    "Spy": {
+        "name": "Spy",
+        "description": "The Spy is a covert operative skilled in gathering intelligence and conducting espionage. They can infiltrate enemy lines and uncover critical information.",
+        "diplomacy": 5,
+        "combat": 10,
+        "espionage": 30,
+        "leadership": 5,
+        "missions": ["Espionage"]
+    },
+    "Scientist": {
+        "name": "Scientist",
+        "description": "The Scientist is a brilliant mind, capable of conducting research and developing new technologies. They can unlock advanced capabilities for their faction.",
+        "diplomacy": 5,
+        "combat": 5,
+        "espionage": 10,
+        "leadership": 30,
+        "missions": ["Research"]
+    },
+    "Explorer": {
+        "name": "Explorer",
+        "description": "The Explorer is an intrepid adventurer, skilled in navigating uncharted territories and discovering new worlds. They can lead expeditions and uncover valuable resources.",
+        "diplomacy": 5,
+        "combat": 10,
+        "espionage": 30,
+        "leadership": 5,
+        "missions": ["Exploration"]
+    },
+    "Commando": {
+        "name": "Commando",
+        "description": "The Commando is a highly trained soldier, adept at executing precision strikes and special operations. They excel in combat and can lead elite units into battle.",
+        "diplomacy": 5,
+        "combat": 30,
+        "espionage": 10,
+        "leadership": 5,
+        "missions": ["Sabotage"]
+    },
+    "Firebrand": {
+        "name": "Firebrand",
+        "description": "The Firebrand is a master of subversive activities, skilled in inciting rebellion and destabilizing enemy regimes. They can ignite resistance movements and create chaos in hostile territories.",
+        "diplomacy": 5,
+        "combat": 10,
+        "espionage": 10,
+        "leadership": 30,
+        "missions": ["Subversion"]
+    },
+    "Partisan": {
+        "name": "Partisan",
+        "description": "The Partisan is a resistance fighter, skilled in guerrilla warfare and sabotage. They can strike at enemy infrastructure and disrupt their operations.",
+        "diplomacy": 5,
+        "combat": 10,
+        "espionage": 5,
+        "leadership": 30,
+        "missions": ["Suppression"]
+    },
+    "Commander": {
+        "name": "Commander",
+        "description": "The Commander is a tactical genius, leading fighters into space battles",
+        "diplomacy": 5,
+        "combat": 10,
+        "espionage": 5,
+        "leadership": 30,
+        "command": ["Fighter"] 
+    },
+    "General": {
+        "name": "General",
+        "description": "The General is a master strategist, capable of leading large-scale planetary operations and coordinating multiple units in battle.",
+        "diplomacy": 5,
+        "combat": 10,
+        "espionage": 5,
+        "leadership": 30,
+        "command": ["Troop"]
+    },
+    "Admiral": {
+        "name": "Admiral",
+        "description": "The Admiral is a seasoned naval officer, commanding fleets of starships and orchestrating space battles with precision.",
+        "diplomacy": 5,
+        "combat": 10,
+        "espionage": 5,
+        "leadership": 30,
+        "command": ["Ship"]
+    }
+}

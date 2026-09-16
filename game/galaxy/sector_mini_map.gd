@@ -3,15 +3,23 @@ extends Control
 ## focus it. Drawn from data, so zoom/pan independent.
 ##
 ## Each system reserves room around and below itself: three placeholder
-## icons (fleet triangle, manufacturing square, unit diamond) arc over the
+## icons (dart flight, manufacturing square, factory) arc over the
 ## dot, and three placeholder bars (energy, resource, political) sit below
 ## it. All sizes come from the theme; fills are fixed placeholders until
-## the simulation drives them.
+## the simulation drives them. A system whose political share reaches the
+## themed ownership threshold is owned: its dot takes the owner's faction
+## color, otherwise it stays explored/unexplored. Icons and bars stay
+## hidden until a system is charted, and uncharted systems sit at the
+## themed neutral share so neither side gains them by luck.
 
 signal system_picked(system_id: int)
 
 ## Breathing room kept between neighboring systems for icons and bars.
 const ICON_ROOM := 12.0
+const ALLIANCE_EMBLEM := preload("res://art/alliance_emblem.png")
+const EMPIRE_EMBLEM := preload("res://art/empire_emblem.png")
+const DART_FLIGHT := preload("res://art/dart_flight.png")
+const FACTORY_ICON := preload("res://art/factory.png")
 var _systems: Array = []
 var _focused := -1
 var _dot := 7.0
@@ -26,9 +34,15 @@ var _icon_size := 7.0
 var _bar_w := 44.0
 var _bar_h := 5.0
 var _bar_gap := 3.0
+var _slot_w := 10.0
+var _slot_sep := 5.0
+var _energy_min := 3.0
 var _energy_max := 6.0
+var _resource_min := 2.0
 var _resource_max := 6.0
 var _side := 0
+var _ownership_threshold := 0.65
+var _neutral_share := 0.5
 var _theme: Dictionary = {}
 
 
@@ -45,11 +59,17 @@ func show_sector(systems: Array, focused_id: int) -> void:
 	_bar_w = float(layout["bar_width"])
 	_bar_h = float(layout["bar_height"])
 	_bar_gap = float(layout["bar_gap"])
+	_slot_w = maxf(1.0, float(layout["slot_width"]))
+	_slot_sep = maxf(0.0, float(layout["slot_separator"]))
 	_energy_max = maxf(1.0, float(layout["energy_max_slots"]))
 	_resource_max = maxf(1.0, float(layout["resource_max_slots"]))
+	_energy_min = clampf(float(layout["energy_min_available"]), 1.0, _energy_max)
+	_resource_min = clampf(float(layout["resource_min_available"]), 1.0, _resource_max)
 	_tag_size = int(GalaxyData.fonts()["mini_tag"])
 	_theme = GalaxyData.colors()
 	_side = int(GalaxyData.load_settings()["side"])
+	_ownership_threshold = clampf(float(GalaxyData.politics()["ownership_threshold"]), 0.5, 1.0)
+	_neutral_share = clampf(float(GalaxyData.politics()["neutral_share"]), 0.0, 1.0)
 	queue_redraw()
 
 
@@ -79,6 +99,54 @@ func _faction_pair() -> Array:
 	if _side == 0:
 		return [alliance, empire]
 	return [empire, alliance]
+
+
+## Ownership from a political share: at/above threshold the system is
+## owned by the given side, at/below (1 - threshold) by its rival,
+## otherwise neutral (-1). Static in share so the rule holds for any
+## threshold without a live map.
+static func owner_for(frac: float, threshold: float, side: int) -> int:
+	if frac >= threshold:
+		return side
+	if frac <= 1.0 - threshold:
+		return 1 - side
+	return -1
+
+
+## Political share for a system: charted systems use their deterministic
+## placeholder fill, uncharted ones sit at the themed neutral share.
+func political_frac(system_id: int) -> float:
+	if not _system_for(system_id).get("explored", false):
+		return _neutral_share
+	return bar_frac(system_id, 2)
+
+
+## Icons and bars stay hidden until a system is charted (explored).
+func decorations_shown(system_id: int) -> bool:
+	return bool(_system_for(system_id).get("explored", false))
+
+
+## Owning faction index into faction names, or -1 while neutral.
+func owner_of(system_id: int) -> int:
+	return owner_for(political_frac(system_id), _ownership_threshold, _side)
+
+
+## Theme color for a faction index; white when a renamed faction has no
+## matching color key.
+func _faction_color(idx: int) -> Color:
+	var names := GalaxyData.factions()
+	if idx < 0 or idx >= names.size():
+		return Color.WHITE
+	return _theme.get(str(names[idx]).to_lower(), Color.WHITE)
+
+
+## Dot color: owner's faction color once owned, else explored/unexplored.
+## Pure given map state so headless checks can pin it without a renderer.
+func dot_color(system_id: int, explored: bool) -> Color:
+	var owner := owner_of(system_id)
+	if owner >= 0:
+		return _faction_color(owner)
+	return _theme.get("explored", Color.BLUE) if explored else _theme.get("unexplored", Color.GRAY)
 
 
 func set_focused(system_id: int) -> void:
@@ -124,20 +192,30 @@ func layout() -> Dictionary:
 ## Deterministic placeholder fill per system and bar until the simulation
 ## drives them. Pure function so tests can pin it.
 func bar_frac(system_id: int, bar: int) -> float:
+	var economy: Dictionary = _system_for(system_id).get("economy", {})
+	if bar == 2 and economy.has("political_share"):
+		return float(economy["political_share"])
 	return 0.2 + 0.6 * float((system_id * 37 + bar * 101) % 100) / 100.0
 
 
-## Deterministic placeholder energy slots until the simulation drives
-## them: 3-5 total, some used. Pure function so tests can pin it.
+
+## totals spread from minimum initial available to max.
 func energy_slots(system_id: int) -> Dictionary:
-	var total := 3 + system_id % 3
-	return {"total": total, "used": 1 + (system_id * 7) % total}
+	var system := _system_for(system_id)
+	if system.has("energy_slots"):
+		return system["energy_slots"]
+	var span := maxi(1, int(_energy_max) - int(_energy_min) + 1)
+	var total := int(_energy_min) + (system_id % span)
+	return {"total": total, "used": 0}
 
-
-## Deterministic placeholder resource slots: 2-5 total, some used.
+## some used.
 func resource_slots(system_id: int) -> Dictionary:
-	var total := 2 + system_id % 4
-	return {"total": total, "used": 1 + (system_id * 5) % total}
+	var system := _system_for(system_id)
+	if system.has("resource_slots"):
+		return system["resource_slots"]
+	var span := maxi(1, int(_resource_max) - int(_resource_min) + 1)
+	var total := int(_resource_min) + (system_id % span)
+	return {"total": total, "used": 0}
 
 
 ## Largest dots that still fit: half the closest pair gap, minus room for
@@ -154,7 +232,8 @@ func _fit_dots(points: Array) -> void:
 
 ## Icon slots and bar rects for a system. Pure layout math so tests can
 ## verify it without a renderer. The political bar splits: player faction
-## on the left, rival on the right.
+## on the left, rival on the right. The entry also carries the owning
+## faction index ("owner", -1 while neutral).
 func decor(center: Vector2, system_id: int) -> Dictionary:
 	var icons: Array = []
 	var angles := [-90.0, -30.0, -150.0]
@@ -172,28 +251,24 @@ func decor(center: Vector2, system_id: int) -> Dictionary:
 		var entry := {
 			"rect": rect,
 			"fill": fills[b],
-			"frac": bar_frac(system_id, b),
+			"frac": political_frac(system_id) if political else bar_frac(system_id, b),
 			"split": political,
 			"left": pair[0] if political else _theme.get(fills[b], Color.WHITE),
 			"right": pair[1] if political else Color(0, 0, 0, 0),
 			"slots": slots,
 		}
 		if b < 2:
-			# Slotted bars share one standard slot size: bar width at max
-			# slots, so fewer slots means a narrower bar, never narrower
-			# slots. All bars left-justify to the political bar's edge.
+			# Slotted bars always span the full width (max slots, same
+			# length as the political bar); only `total` segments from
+			# the left are visible, the rest stays transparent.
 			var cfg := _slot_config(b, system_id)
-			slots = cfg["slots"]
-			var w := float(slots["total"]) * (_bar_w / float(cfg["max"]))
-			rect.size.x = w
-			rect.position.x = center.x - _bar_w * 0.5
-			entry["rect"] = rect
-			entry["slots"] = slots
+			entry["slots"] = cfg["slots"]
+			entry["max_slots"] = cfg["max"]
 			entry["open"] = cfg["open"]
 			entry["used"] = cfg["used"]
 			entry["divider"] = _theme.get("bar_divider", Color.BLACK)
 		bars.append(entry)
-	return {"icons": icons, "bars": bars}
+	return {"icons": icons, "bars": bars, "owner": owner_of(system_id)}
 
 
 func system_at(point: Vector2) -> int:
@@ -228,13 +303,13 @@ func _draw() -> void:
 	for id in dots:
 		var center: Vector2 = dots[id]
 		var sys := _system_for(id)
-		var color: Color = _theme.get("explored", Color.BLUE) if sys.get("explored", false) else _theme.get("unexplored", Color.GRAY)
-		draw_circle(center, _dot, color)
-		var deco := decor(center, int(id))
-		for icon in deco["icons"]:
-			_draw_icon(icon["pos"], int(icon["kind"]), icon_cols[int(icon["kind"])])
-		for bar in deco["bars"]:
-			_draw_bar(bar)
+		draw_circle(center, _dot, dot_color(int(id), sys.get("explored", false)))
+		if decorations_shown(int(id)):
+			var deco := decor(center, int(id))
+			for icon in deco["icons"]:
+				_draw_icon(icon["pos"], int(icon["kind"]), icon_cols[int(icon["kind"])])
+			for bar in deco["bars"]:
+				_draw_bar(bar)
 		if int(id) == _focused:
 			draw_arc(center, _dot + 4.0, 0.0, TAU, 32, Color.WHITE, 2.0)
 			if font != null:
@@ -242,24 +317,52 @@ func _draw() -> void:
 					HORIZONTAL_ALIGNMENT_LEFT, -1.0, _tag_size, Color.WHITE)
 
 
-## kind 0 fleet triangle, 1 manufacturing square, 2 unit diamond.
+## kind 0 flight of darts, 1 emblem, 2 factory.
 func _draw_icon(pos: Vector2, kind: int, color: Color) -> void:
-	var s := _icon_size
+	var s := _icon_size * 2.4
 	match kind:
 		0:
-			draw_colored_polygon([pos + Vector2(0, -s), pos + Vector2(s * 0.9, s * 0.7), pos + Vector2(-s * 0.9, s * 0.7)], color)
+			var tex := DART_FLIGHT
+			var rect := Rect2(pos - Vector2(s, s) * 0.55, Vector2(s, s) * 1.1)
+			draw_texture_rect(tex, rect, false, color)
 		1:
-			draw_rect(Rect2(pos - Vector2(s, s) * 0.8, Vector2(s, s) * 1.6), color)
+			var emblem := ALLIANCE_EMBLEM if _side == 0 else EMPIRE_EMBLEM
+			var rect2 := Rect2(pos - Vector2(s, s) * 0.55, Vector2(s, s) * 1.1)
+			draw_texture_rect(emblem, rect2, false, color)
 		_:
-			draw_colored_polygon([pos + Vector2(0, -s), pos + Vector2(s * 0.7, 0), pos + Vector2(0, s), pos + Vector2(-s * 0.7, 0)], color)
+			var rect3 := Rect2(pos - Vector2(s, s) * 0.55, Vector2(s, s) * 1.1)
+			draw_texture_rect(FACTORY_ICON, rect3, false, color)
+
+
+## Cell and divider geometry for a slotted bar at a fixed pitch: every
+## slot is exactly slot_width wide with slot_separator between visible
+## segments (13 slots -> 12 dividers), so no dynamic sizing can skew the
+## render. Cells are relative to the bar origin with unit height; the
+## caller offsets them. Pure math so headless checks can pin it.
+func slot_rects(total: int, max_slots: int) -> Dictionary:
+	var n := maxi(1, max_slots)
+	var vis := clampi(total, 0, n)
+	var pitch := _slot_w + _slot_sep
+	var cells: Array = []
+	for i in range(vis):
+		cells.append(Rect2(Vector2(pitch * float(i), 0.0), Vector2(_slot_w, 1.0)))
+	var divs: Array = []
+	for i in range(1, vis):
+		divs.append(pitch * float(i) - _slot_sep)
+	return {
+		"seg": pitch, "slot": _slot_w, "divider": _slot_sep,
+		"cells": cells, "dividers": divs, "visible": vis,
+	}
 
 
 func _draw_bar(bar: Dictionary) -> void:
 	var rect: Rect2 = bar["rect"]
-	draw_rect(rect, _theme.get("bar_track", Color.DARK_GRAY))
 	if not (bar["slots"] as Dictionary).is_empty():
+		# Slotted bars sit on a transparent full-width track: only the
+		# visible slots and their dividers draw.
 		_draw_slots(bar)
 		return
+	draw_rect(rect, _theme.get("bar_track", Color.DARK_GRAY))
 	var frac := clampf(float(bar["frac"]), 0.0, 1.0)
 	if bool(bar["split"]):
 		var left := rect
@@ -275,20 +378,23 @@ func _draw_bar(bar: Dictionary) -> void:
 		draw_rect(fill, bar["left"])
 
 
-## Segmented slots at one standard size: used slots white, available ones
-## blue, dark dividers between them so the count reads.
+## Segmented slots at the standard full-width size: available slots in
+## the themed open color, used slots in the used color, dark dividers
+## only between visible segments. Simple per-cell pass, no search.
 func _draw_slots(bar: Dictionary) -> void:
 	var rect: Rect2 = bar["rect"]
 	var slots: Dictionary = bar["slots"]
-	var total := maxi(1, int(slots["total"]))
-	var used := clampi(int(slots["used"]), 0, total)
-	var seg := rect.size.x / float(total)
-	for i in range(total):
-		var cell := Rect2(rect.position + Vector2(seg * float(i) + 1.0, 0), Vector2(seg - 2.0, rect.size.y))
+	var layout := slot_rects(int(slots["total"]), int(bar.get("max_slots", 1)))
+	var used := clampi(int(slots["used"]), 0, int(layout["visible"]))
+	var cells: Array = layout["cells"]
+	for i in range(cells.size()):
+		var cell: Rect2 = cells[i]
+		cell.position += rect.position
+		cell.size.y = rect.size.y
 		draw_rect(cell, bar["used"] if i < used else bar["open"])
-	for i in range(1, total):
-		var x := rect.position.x + seg * float(i) - 1.0
-		draw_rect(Rect2(x, rect.position.y, 2.0, rect.size.y), bar["divider"])
+	for dx in (layout["dividers"] as Array):
+		var x := rect.position.x + float(dx)
+		draw_rect(Rect2(x, rect.position.y, float(layout["divider"]), rect.size.y), bar["divider"])
 
 
 func _system_for(system_id: int) -> Dictionary:

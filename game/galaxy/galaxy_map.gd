@@ -47,6 +47,9 @@ var _cards: Array = []
 var _next_slot := 0
 var _open_systems := {}
 
+var _game_data: GameData
+
+
 @onready var _sector_label: Label = %SectorLabel
 @onready var _sector_button: OptionButton = %SectorButton
 @onready var _system_list: ItemList = %SystemList
@@ -63,6 +66,7 @@ func _ready() -> void:
 	_apply_theme()
 	_sectors = GalaxyData.sectors_for_size(GalaxyData.load_sectors(), settings["size"])
 	_systems = GalaxyData.systems_for_sectors(GalaxyData.load_systems(), _sectors)
+	_game_data = GameData.new(_side, [], _systems, int(settings["difficulty"]))
 	_setup_clock(int(settings["speed"]))
 	_compute_transform()
 	_center_galaxy()
@@ -70,7 +74,7 @@ func _ready() -> void:
 	_spawn_cards()
 	if not _sectors.is_empty():
 		select_sector(_sectors[0]["id"])
-
+	
 
 func _apply_theme() -> void:
 	var layout := GalaxyData.layout()
@@ -273,6 +277,23 @@ func _refresh_day() -> void:
 	if whole != _shown_day:
 		_shown_day = whole
 		_day_label.text = "Day %d" % whole
+		_process_day()
+
+func _process_day() -> void:
+	_process_units()
+	_process_fleets()
+	_process_logistics()
+	
+			
+#stub to handle unit processing
+func _process_units() -> void:
+	return
+	
+func _process_fleets() -> void:
+	return
+	
+func _process_logistics() -> void:
+	return
 
 
 func _on_speed_selected(index: int) -> void:
