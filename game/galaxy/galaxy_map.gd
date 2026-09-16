@@ -54,15 +54,20 @@ var _game_data: GameData
 @onready var _sector_button: OptionButton = %SectorButton
 @onready var _system_list: ItemList = %SystemList
 @onready var _day_label: Label = %DayLabel
+@onready var _raw_label: Label = %Raw
+@onready var _refined_label: Label = %Refined
+@onready var _maintenance_label: Label = %Maintenance
 @onready var _speed_button: OptionButton = %SpeedButton
 @onready var _pip_grid: Control = %PiPGrid
 @onready var _side_panel: PanelContainer = %Panel
+@onready var _top_bar: PanelContainer = $UI/TopBar
 
 
 func _ready() -> void:
 	var settings := GalaxyData.load_settings()
 	_side = int(settings["side"])
 	_theme = GalaxyData.colors()
+	_apply_faction_top_bar_theme()
 	_apply_theme()
 	_sectors = GalaxyData.sectors_for_size(GalaxyData.load_sectors(), settings["size"])
 	_systems = GalaxyData.systems_for_sectors(GalaxyData.load_systems(), _sectors)
@@ -74,6 +79,7 @@ func _ready() -> void:
 	_spawn_cards()
 	if not _sectors.is_empty():
 		select_sector(_sectors[0]["id"])
+	_refresh_resource_labels()
 	
 
 func _apply_theme() -> void:
@@ -96,6 +102,53 @@ func _apply_theme() -> void:
 	_dot_u = float(layout["dot_unexplored"])
 	_side_panel.offset_left = -float(layout["panel_width"])
 	_sector_label.add_theme_font_size_override("font_size", int(fonts["panel_header"]))
+
+
+func _faction_accent() -> Color:
+	return _theme.get("alliance", Color.RED) if _side == 0 else _theme.get("empire", Color.GREEN)
+
+
+func _top_bar_style(background: Color, border: Color, radius := 4) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = border
+	style.corner_radius_top_left = radius
+	style.corner_radius_top_right = radius
+	style.corner_radius_bottom_right = radius
+	style.corner_radius_bottom_left = radius
+	style.content_margin_left = 10.0
+	style.content_margin_right = 10.0
+	return style
+
+
+func _apply_faction_top_bar_theme() -> void:
+	var accent := _faction_accent()
+	var bright := accent.lerp(Color.WHITE, 0.25)
+	var dark_accent := accent.darkened(0.65)
+	var content := _top_bar.get_node("Content") as HBoxContainer
+	var menu := content.get_node("MenuButton") as Button
+	var speed := content.get_node("SpeedButton") as OptionButton
+	var panel := _top_bar_style(Color(0.025, 0.055, 0.11, 0.96), accent, 6)
+	panel.shadow_color = Color(0, 0, 0, 0.5)
+	panel.shadow_size = 5
+	panel.shadow_offset = Vector2(0, 2)
+	_top_bar.add_theme_stylebox_override("panel", panel)
+	var normal := _top_bar_style(Color(0.04, 0.08, 0.13, 0.95), dark_accent)
+	var hover := _top_bar_style(accent.darkened(0.55), bright)
+	var pressed := _top_bar_style(accent.darkened(0.4), Color.WHITE)
+	for control in [menu, speed]:
+		control.add_theme_stylebox_override("normal", normal)
+		control.add_theme_stylebox_override("hover", hover)
+		control.add_theme_stylebox_override("pressed", pressed)
+		control.add_theme_color_override("font_color", bright)
+		control.add_theme_color_override("font_hover_color", Color.WHITE)
+		control.add_theme_color_override("font_pressed_color", Color.WHITE)
+	for label in [_day_label, _raw_label, _refined_label, _maintenance_label]:
+		label.add_theme_color_override("font_color", Color.WHITE)
 
 
 func map_pos(p: Vector2i) -> Vector2:
@@ -277,14 +330,27 @@ func _refresh_day() -> void:
 	if whole != _shown_day:
 		_shown_day = whole
 		_day_label.text = "Day %d" % whole
-		_process_day()
+		if whole > 0:
+			_process_day()
 
 func _process_day() -> void:
+	if _game_data != null:
+		_game_data.process_day()
+		_refresh_resource_labels()
 	_process_units()
 	_process_fleets()
 	_process_logistics()
-	
-			
+
+func _refresh_resource_labels() -> void:
+	if _game_data == null:
+		return
+	var factions: Array = _game_data.getData('faction_data')
+	if _side >= 0 and _side < factions.size():
+		_raw_label.text = "Raw %d" % int(factions[_side].get('raw', 0))
+		_refined_label.text = "Refined %d" % int(factions[_side].get('refined', 0))
+		_maintenance_label.text = "Maintenance %d" % int(factions[_side].get('maintenance', 0))
+
+
 #stub to handle unit processing
 func _process_units() -> void:
 	return

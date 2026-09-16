@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bgafmxqq4lu2g" path="res://galaxy/galaxy_map.gd" id="1_map"]
 [ext_resource type="Script" uid="uid://j6kbhjk1eu30" path="res://galaxy/starfield.gd" id="2_field"]
+[ext_resource type="Theme" path="res://theme/top_bar.tres" id="3_topbar"]
 
 [node name="GalaxyMap" type="Node2D" unique_id=21475926]
 script = ExtResource("1_map")
@@ -23,39 +24,50 @@ script = ExtResource("2_field")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=494572540]
 
-[node name="TopBar" type="HBoxContainer" parent="UI" unique_id=115719667]
+[node name="TopBar" type="PanelContainer" parent="UI" unique_id=115719667]
 offset_left = 16.0
 offset_top = 12.0
 offset_right = 884.0
 offset_bottom = 52.0
+theme = ExtResource("3_topbar")
+
+[node name="Content" type="HBoxContainer" parent="UI/TopBar" unique_id=711423606]
+layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="MenuButton" type="Button" parent="UI/TopBar" unique_id=711423605]
+[node name="MenuButton" type="Button" parent="UI/TopBar/Content" unique_id=711423605]
 layout_mode = 2
 text = "Menu"
 
-[node name="DayLabel" type="Label" parent="UI/TopBar" unique_id=250614096]
+[node name="DayLabel" type="Label" parent="UI/TopBar/Content" unique_id=250614096]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Day 0"
 vertical_alignment = 1
 
-[node name="Raw" type="Label" parent="UI/TopBar" unique_id=965785164]
+[node name="Raw" type="Label" parent="UI/TopBar/Content" unique_id=965785164]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Raw 0"
 vertical_alignment = 1
 
-[node name="Refined" type="Label" parent="UI/TopBar" unique_id=727198984]
+[node name="Refined" type="Label" parent="UI/TopBar/Content" unique_id=727198984]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Refined 0"
 vertical_alignment = 1
 
-[node name="SpeedButton" type="OptionButton" parent="UI/TopBar" unique_id=1191362047]
+[node name="Maintenance" type="Label" parent="UI/TopBar/Content" unique_id=727198985]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Maintenance 0"
+vertical_alignment = 1
+
+[node name="SpeedButton" type="OptionButton" parent="UI/TopBar/Content" unique_id=1191362047]
 unique_name_in_owner = true
 layout_mode = 2
 
@@ -106,6 +118,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[connection signal="pressed" from="UI/TopBar/MenuButton" to="." method="_on_menu_pressed"]
-[connection signal="item_selected" from="UI/TopBar/SpeedButton" to="." method="_on_speed_selected"]
+[connection signal="pressed" from="UI/TopBar/Content/MenuButton" to="." method="_on_menu_pressed"]
+[connection signal="item_selected" from="UI/TopBar/Content/SpeedButton" to="." method="_on_speed_selected"]
 [connection signal="item_selected" from="UI/Panel/Margin/Column/SectorButton" to="." method="_on_sector_selected"]

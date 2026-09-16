@@ -85,18 +85,21 @@ const DEFAULT_ECONOMY := [
 		"major_min_refineries": 2, "major_max_refineries": 4,
 		"uncharted_seed_chance": 0.35,
 		"uncharted_max_mines": 1, "uncharted_max_refineries": 1,
+		"maintenance_points_per_pair": 50,
 	},
 	{
 		"major_min_mines": 2, "major_max_mines": 5,
 		"major_min_refineries": 1, "major_max_refineries": 3,
 		"uncharted_seed_chance": 0.20,
 		"uncharted_max_mines": 1, "uncharted_max_refineries": 1,
+		"maintenance_points_per_pair": 50,
 	},
 	{
 		"major_min_mines": 1, "major_max_mines": 4,
 		"major_min_refineries": 1, "major_max_refineries": 2,
 		"uncharted_seed_chance": 0.10,
 		"uncharted_max_mines": 1, "uncharted_max_refineries": 1,
+		"maintenance_points_per_pair": 50,
 	},
 ]
 
