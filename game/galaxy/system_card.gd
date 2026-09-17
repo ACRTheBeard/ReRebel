@@ -8,6 +8,7 @@ extends PanelContainer
 signal closed
 signal focus_changed
 signal manufacturing_requested(system_id: int)
+signal construction_target_selected(system_id: int)
 
 var focused_id := -1
 var sector_id := -1
@@ -46,6 +47,26 @@ func focus_system(sys: Dictionary) -> void:
 	focus_changed.emit()
 
 
+func refresh_sector() -> void:
+	if visible:
+		_mini.queue_redraw()
+
+
+func begin_target_selection() -> void:
+	_mini.call("begin_target_selection")
+
+
+func end_target_selection() -> void:
+	_mini.call("end_target_selection")
+
+
+func target_system_at_global(global_point: Vector2) -> int:
+	if not visible or not _mini.get_global_rect().has_point(global_point):
+		return -1
+	var local_point := _mini.get_global_transform_with_canvas().affine_inverse() * global_point
+	return int(_mini.call("target_system_at", local_point))
+
+
 func _on_mini_picked(system_id: int) -> void:
 	for s in _systems:
 		if int(s["id"]) == system_id:
@@ -55,6 +76,10 @@ func _on_mini_picked(system_id: int) -> void:
 
 func _on_mini_manufacturing_requested(system_id: int) -> void:
 	manufacturing_requested.emit(system_id)
+
+
+func _on_mini_construction_target_selected(system_id: int) -> void:
+	construction_target_selected.emit(system_id)
 
 
 func _on_close_pressed() -> void:

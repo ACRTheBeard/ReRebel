@@ -197,11 +197,176 @@ func process_day() -> Dictionary:
 		factions[owner]['raw'] -= refinery_result['raw_used']
 		factions[owner]['refined'] += refinery_result['refined']
 		produced_refined[owner] += refinery_result['refined']
+	_process_construction_orders()
 	return {
 		'raw': produced_raw,
 		'refined': produced_refined,
 		'factions': factions,
 	}
+
+func building_catalog() -> Dictionary:
+	return _building_catalog.duplicate(true)
+
+func queue_building(system_id: int, building_id: int, quantity: int, target_system_id := -1) -> bool:
+	var entry := _catalog_entry(building_id)
+	if quantity <= 0 or entry.is_empty() or not entry.has('cost') or not entry.has('daysToProduce'):
+		return false
+	for system in getData('system_data'):
+		if int(system.get('id', -1)) != system_id:
+			continue
+		if int(system.get('owner', -1)) != int(getData('side')):
+			return false
+		if _count_buildings(system.get('buildings', []), CONSTRUCTION_YARD_ID) <= 0:
+			return false
+		var target: Dictionary = system if target_system_id < 0 else _system_by_id(target_system_id)
+		if target.is_empty() or int(target.get('owner', -1)) != int(getData('side')):
+			return false
+		var orders: Dictionary = system.get('manufacturing_orders', {})
+		var existing: Variant = orders.get('construction', {})
+		if existing is Dictionary and not (existing as Dictionary).is_empty():
+			return false
+		var slots: Dictionary = target.get('%s_slots' % str(entry.get('slot', 'energy')), {})
+		var available_slots := int(slots.get('total', 0)) - int(slots.get('used', 0))
+		if quantity > available_slots:
+			return false
+		orders['construction'] = {
+			'building_id': building_id,
+			'remaining': quantity,
+			'construction_points': 0,
+			'elapsed_days': 0.0,
+			'target_system_id': int(target.get('id', system_id)),
+		}
+		system['manufacturing_orders'] = orders
+		_recalculate_slots(system)
+		if int(target.get('id', -1)) != system_id:
+			_recalculate_slots(target)
+		return true
+	return false
+
+func cancel_building_order(system_id: int) -> void:
+	for system in getData('system_data'):
+		if int(system.get('id', -1)) == system_id:
+			var orders: Dictionary = system.get('manufacturing_orders', {})
+			orders.erase('construction')
+			system['manufacturing_orders'] = orders
+			for affected_system in getData('system_data'):
+				_recalculate_slots(affected_system)
+			return
+
+func _process_construction_orders() -> void:
+	var factions: Array = getData('faction_data')
+	var player_faction := int(getData('side'))
+	_process_transit_orders()
+	for system in getData('system_data'):
+		var orders: Dictionary = system.get('manufacturing_orders', {})
+		var order: Variant = orders.get('construction', {})
+		if not order is Dictionary or order.is_empty():
+			continue
+		var entry := _catalog_entry(int(order.get('building_id', -1)))
+		var owner := int(system.get('owner', -1))
+		if entry.is_empty() or owner < 0 or owner >= factions.size():
+			continue
+		var construction_yards := _count_buildings(system.get('buildings', []), CONSTRUCTION_YARD_ID)
+		if construction_yards <= 0:
+			continue
+		var cycle_days := maxf(0.01, float(entry.get('daysToProduce', 1)))
+		order['elapsed_days'] = float(order.get('elapsed_days', 0.0)) + 1.0
+		if float(order['elapsed_days']) < cycle_days:
+			continue
+		var cost := maxi(1, int(entry.get('cost', 0)))
+		var resource := 'refined'
+		var available_resources := int(factions[owner].get(resource, 0))
+		if available_resources <= 0:
+			order['elapsed_days'] = cycle_days
+			continue
+		var points_produced := mini(construction_yards, available_resources)
+		factions[owner][resource] = available_resources - points_produced
+		order['construction_points'] = int(order.get('construction_points', 0)) + points_produced
+		order['elapsed_days'] = 0.0
+		while int(order.get('construction_points', 0)) >= cost and int(order.get('remaining', 0)) > 0:
+			var completed_building_id := int(order.get('building_id', -1))
+			order['construction_points'] = int(order.get('construction_points', 0)) - cost
+			order['remaining'] = int(order.get('remaining', 1)) - 1
+			orders['construction'] = order
+			system['manufacturing_orders'] = orders
+			_start_transit(system, completed_building_id, int(order.get('target_system_id', system.get('id', -1))))
+		if int(order.get('remaining', 0)) <= 0:
+			orders.erase('construction')
+		else:
+			orders['construction'] = order
+		_recalculate_slots(system)
+		system['manufacturing_orders'] = orders
+		if owner == player_faction:
+			system['economy']['construction'] = int(system.get('economy', {}).get('construction', 0)) + points_produced
+
+func _start_transit(source: Dictionary, building_id: int, target_id: int) -> void:
+	var target := _system_by_id(target_id)
+	if target.is_empty():
+		return
+	if int(source.get('id', -1)) == target_id:
+		_add_completed_building(target, building_id)
+		return
+	var transit: Array = target.get('building_transit', [])
+	transit.append({'building_id': building_id, 'days_remaining': 1.0, 'source_system_id': source.get('id', -1)})
+	target['building_transit'] = transit
+	_recalculate_slots(target)
+
+func _process_transit_orders() -> void:
+	for target in getData('system_data'):
+		var transit: Array = target.get('building_transit', [])
+		var remaining: Array = []
+		for shipment in transit:
+			var delivery := shipment as Dictionary
+			delivery['days_remaining'] = float(delivery.get('days_remaining', 1.0)) - 1.0
+			if float(delivery['days_remaining']) <= 0.0:
+				_add_completed_building(target, int(delivery.get('building_id', -1)))
+			else:
+				remaining.append(delivery)
+		target['building_transit'] = remaining
+		_recalculate_slots(target)
+
+func _add_completed_building(system: Dictionary, building_id: int) -> void:
+	var buildings: Array = system.get('buildings', [])
+	buildings.append(building_id)
+	system['buildings'] = buildings
+	_recalculate_slots(system)
+
+func _system_by_id(system_id: int) -> Dictionary:
+	for system in getData('system_data'):
+		if int(system.get('id', -1)) == system_id:
+			return system
+	return {}
+
+func _has_building_slot(system: Dictionary, slot: String) -> bool:
+	var slots: Dictionary = system.get('%s_slots' % slot, {})
+	return int(slots.get('used', 0)) < int(slots.get('total', 0))
+
+func _recalculate_slots(system: Dictionary) -> void:
+	var buildings: Array = system.get('buildings', [])
+	var resource_slots: Dictionary = system.get('resource_slots', {})
+	resource_slots['used'] = _count_buildings(buildings, MINE_ID) + _reserved_slots(system, 'resource')
+	var energy_slots: Dictionary = system.get('energy_slots', {})
+	energy_slots['used'] = buildings.size() - _count_buildings(buildings, MINE_ID) + _reserved_slots(system, 'energy')
+	system['resource_slots'] = resource_slots
+	system['energy_slots'] = energy_slots
+
+func _reserved_slots(system: Dictionary, slot: String) -> int:
+	var reserved := 0
+	var system_id := int(system.get('id', -1))
+	for source in getData('system_data'):
+		var order: Variant = source.get('manufacturing_orders', {}).get('construction', {})
+		if not order is Dictionary or order.is_empty():
+			continue
+		if int(order.get('target_system_id', source.get('id', -1))) != system_id:
+			continue
+		var entry := _catalog_entry(int(order.get('building_id', -1)))
+		if str(entry.get('slot', 'energy')) == slot:
+			reserved += int(order.get('remaining', 0))
+	for shipment in system.get('building_transit', []):
+		var transit_entry := _catalog_entry(int((shipment as Dictionary).get('building_id', -1)))
+		if str(transit_entry.get('slot', 'energy')) == slot:
+			reserved += 1
+	return reserved
 
 func _refine_resources(buildings: Array, available_raw: int) -> Dictionary:
 	var raw_used := 0

@@ -14,6 +14,7 @@ extends Control
 
 signal system_picked(system_id: int)
 signal manufacturing_requested(system_id: int)
+signal construction_target_selected(system_id: int)
 
 ## Breathing room kept between neighboring systems for icons and bars.
 const ICON_ROOM := 12.0
@@ -46,6 +47,7 @@ var _side := 0
 var _ownership_threshold := 0.65
 var _neutral_share := 0.5
 var _theme: Dictionary = {}
+var _target_selection_active := false
 
 
 func show_sector(systems: Array, focused_id: int) -> void:
@@ -154,6 +156,18 @@ func dot_color(system_id: int, explored: bool) -> Color:
 func set_focused(system_id: int) -> void:
 	_focused = system_id
 	queue_redraw()
+
+
+func begin_target_selection() -> void:
+	_target_selection_active = true
+
+
+func end_target_selection() -> void:
+	_target_selection_active = false
+
+
+func target_system_at(point: Vector2) -> int:
+	return system_at(point)
 
 
 ## Clearance the decorations need: icons on the sides and top, dot plus
@@ -297,6 +311,12 @@ func manufacturing_at(point: Vector2) -> int:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
+		if _target_selection_active and mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed:
+			var target_id := system_at(mb.position)
+			if target_id >= 0:
+				construction_target_selected.emit(target_id)
+				accept_event()
+			return
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed and mb.double_click:
 			var manufacturing_id := manufacturing_at(mb.position)
 			if manufacturing_id >= 0:

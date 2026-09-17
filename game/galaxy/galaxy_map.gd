@@ -36,8 +36,17 @@ var _press_pos := Vector2.ZERO
 var _theme: Dictionary = {}
 var _day := 0.0
 var _shown_day := -1
-var _overlay_dragging := false
-var _overlay_drag_offset := Vector2.ZERO
+var _manufacturing_minimized := false
+var _manufacturing_source_card: SystemCard = null
+var _manufacturing_system_id := -1
+var _construction_target_system_id := -1
+var _fleet_target_system_id := -1
+var _training_target_system_id := -1
+var _target_panel_id := 2
+var _target_dragging := false
+var _target_drag_position := Vector2.ZERO
+var _target_drag_system_id := -1
+var _minimap_target_selected := false
 var _speed := 2
 var _speed_names := PackedStringArray()
 var _day_lengths := PackedFloat32Array()
@@ -49,6 +58,8 @@ const EMPIRE_EMBLEM := preload("res://art/empire_emblem.png")
 const FACTORY_ICON := preload("res://art/factory.png")
 const FLEET_ICON := preload("res://art/dart_flight.png")
 const GROUND_BASE_ICON := preload("res://art/ground_base.svg")
+const MINE_ICON := preload("res://art/mine.svg")
+const REFINERY_ICON := preload("res://art/refinery.svg")
 const PIP_SLOTS := 2
 
 var _cards: Array = []
@@ -70,8 +81,13 @@ var _game_data: GameData
 @onready var _manufacturing_card: PanelContainer = %ManufacturingCard
 @onready var _manufacturing_title: Label = %Title
 @onready var _manufacturing_header: Control = $UI/ManufacturingCard/Margin/Column/HeaderRow
+@onready var _manufacturing_sector: Button = $UI/ManufacturingCard/Margin/Column/HeaderRow/SectorButton
+@onready var _manufacturing_minimize: Button = $UI/ManufacturingCard/Margin/Column/HeaderRow/MinimizeButton
 @onready var _manufacturing_close: Button = $UI/ManufacturingCard/Margin/Column/HeaderRow/CloseButton
 @onready var _manufacturing_tabs: TabContainer = %ManufacturingTabs
+@onready var _build_modal_backdrop: ColorRect = $BuildModalLayer/BuildModalBackdrop
+@onready var _manufacturing_overlay = %ManufacturingCard
+@onready var _build_modal = %BuildModal
 @onready var _fleet_box: PanelContainer = %FleetBox
 @onready var _troop_box: PanelContainer = %TroopBox
 @onready var _construction_box: PanelContainer = %ConstructionBox
@@ -79,21 +95,33 @@ var _game_data: GameData
 @onready var _fleet_available: Label = %FleetAvailable
 @onready var _fleet_preview: TextureRect = %FleetPreview
 @onready var _fleet_progress: ProgressBar = %FleetProgress
+@onready var _fleet_status: Label = %FleetStatus
+@onready var _fleet_target: Label = %FleetTarget
 @onready var _troop_available: Label = %TroopAvailable
 @onready var _troop_preview: TextureRect = %TroopPreview
 @onready var _troop_progress: ProgressBar = %TroopProgress
+@onready var _troop_status: Label = %TroopStatus
+@onready var _troop_target: Label = %TroopTarget
 @onready var _construction_available: Label = %ConstructionAvailable
 @onready var _construction_preview: TextureRect = %ConstructionPreview
 @onready var _construction_progress: ProgressBar = %ConstructionProgress
+@onready var _construction_status: Label = %ConstructionStatus
+@onready var _construction_target: Label = %ConstructionTarget
 @onready var _construction_existing: HBoxContainer = %ConstructionExisting
-@onready var _construction_building: Label = %ConstructionBuilding
-@onready var _construction_transit: Label = %ConstructionTransit
+@onready var _construction_building: HBoxContainer = %ConstructionBuilding
+@onready var _construction_transit: HBoxContainer = %ConstructionTransit
 @onready var _shipyard_existing: HBoxContainer = %ShipyardExisting
-@onready var _shipyard_building: Label = %ShipyardBuilding
-@onready var _shipyard_transit: Label = %ShipyardTransit
+@onready var _shipyard_building: HBoxContainer = %ShipyardBuilding
+@onready var _shipyard_transit: HBoxContainer = %ShipyardTransit
 @onready var _training_existing: HBoxContainer = %TrainingExisting
-@onready var _training_building: Label = %TrainingBuilding
-@onready var _training_transit: Label = %TrainingTransit
+@onready var _training_building: HBoxContainer = %TrainingBuilding
+@onready var _training_transit: HBoxContainer = %TrainingTransit
+@onready var _mine_existing: HBoxContainer = %MineExisting
+@onready var _refinery_existing: HBoxContainer = %RefineryExisting
+@onready var _mine_building: HBoxContainer = %MineBuilding
+@onready var _mine_transit: HBoxContainer = %MineTransit
+@onready var _refinery_building: HBoxContainer = %RefineryBuilding
+@onready var _refinery_transit: HBoxContainer = %RefineryTransit
 @onready var _side_panel: PanelContainer = %Panel
 @onready var _top_bar: PanelContainer = $UI/TopBar
 @onready var _filter_button: OptionButton = %MapFilterButton
@@ -107,6 +135,13 @@ func _ready() -> void:
 	_apply_theme()
 	_setup_manufacturing_tabs()
 	_theme_manufacturing_overlay()
+	_build_modal.apply_faction_theme(_faction_accent())
+	_manufacturing_overlay.action_requested.connect(_on_action_menu_item_pressed)
+	_manufacturing_overlay.target_drag_started.connect(_on_target_drag_started)
+	_manufacturing_overlay.target_drag_ended.connect(_on_target_drag_ended)
+	_build_modal.build_confirmed.connect(_on_build_confirmed)
+	_build_modal.closed.connect(_on_build_modal_close_pressed)
+	_build_modal.catalog_selected.connect(_on_build_catalog_selected)
 	_sectors = GalaxyData.sectors_for_size(GalaxyData.load_sectors(), settings["size"])
 	_systems = GalaxyData.systems_for_sectors(GalaxyData.load_systems(), _sectors)
 	_game_data = GameData.new(_side, [], _systems, int(settings["difficulty"]))
@@ -128,8 +163,10 @@ func _setup_manufacturing_tabs() -> void:
 		_compact_tab_icon(FACTORY_ICON),
 		_compact_tab_icon(FLEET_ICON),
 		_compact_tab_icon(GROUND_BASE_ICON),
+		_compact_tab_icon(MINE_ICON),
+		_compact_tab_icon(REFINERY_ICON),
 	]
-	var tooltips := ["Landing: production assignments", "Construction yards", "Shipyards", "Troop training"]
+	var tooltips := ["Landing: production assignments", "Construction yards", "Shipyards", "Troop training", "Mines", "Refineries"]
 	for index in range(icons.size()):
 		_manufacturing_tabs.set_tab_title(index, "")
 		_manufacturing_tabs.set_tab_icon(index, icons[index])
@@ -285,7 +322,8 @@ func _spawn_cards() -> void:
 		card.visible = false
 		card.closed.connect(_refresh_open_indicators)
 		card.focus_changed.connect(_refresh_open_indicators)
-		card.manufacturing_requested.connect(_show_manufacturing_card)
+		card.manufacturing_requested.connect(_show_manufacturing_card.bind(card))
+		card.construction_target_selected.connect(_on_minimap_target_selected)
 		_pip_grid.add_child(card)
 		_cards.append(card)
 
@@ -324,16 +362,29 @@ func _refresh_open_indicators() -> void:
 	queue_redraw()
 
 
+func _refresh_sector_cards() -> void:
+	for card in _cards:
+		(card as SystemCard).refresh_sector()
+
+
 func _hide_all_cards() -> void:
 	for card in _cards:
 		(card as PanelContainer).visible = false
 	_refresh_open_indicators()
 
 
-func _show_manufacturing_card(system_id: int) -> void:
+func _show_manufacturing_card(system_id: int, source_card: SystemCard) -> void:
 	var system := _system_by_id(system_id)
 	if system.is_empty():
 		return
+	_manufacturing_source_card = source_card
+	_manufacturing_system_id = system_id
+	_construction_target_system_id = system_id
+	_fleet_target_system_id = system_id
+	_training_target_system_id = system_id
+	_manufacturing_sector.tooltip_text = "Show %s sector mini-map" % _sector_tag(source_card.sector_id)
+	_manufacturing_minimized = false
+	_manufacturing_tabs.visible = true
 	var buildings: Array = system.get("buildings", [])
 	_manufacturing_title.text = "%s Manufacturing" % str(system.get("tag", "System"))
 	var construction_count := _building_count(GameData.CONSTRUCTION_YARD_ID, buildings)
@@ -343,18 +394,17 @@ func _show_manufacturing_card(system_id: int) -> void:
 	_update_order_row(_fleet_available, _fleet_preview, _fleet_progress, shipyard_count, FLEET_ICON)
 	_update_order_row(_troop_available, _troop_preview, _troop_progress, training_count, GROUND_BASE_ICON)
 	_update_order_row(_construction_available, _construction_preview, _construction_progress, construction_count, FACTORY_ICON)
+	_set_idle_order_details()
 	_set_facility_icons(_construction_existing, construction_count, FACTORY_ICON)
-	_construction_building.text = "Being built: %s" % _queue_status(system, "construction")
-	_construction_transit.text = "In transit: %s" % _queue_status(system, "construction_transit")
 	_set_facility_icons(_shipyard_existing, shipyard_count, FLEET_ICON)
-	_shipyard_building.text = "Being built: %s" % _queue_status(system, "ship")
-	_shipyard_transit.text = "In transit: %s" % _queue_status(system, "ship_transit")
 	_set_facility_icons(_training_existing, training_count, GROUND_BASE_ICON)
-	_training_building.text = "Being built: %s" % _queue_status(system, "training")
-	_training_transit.text = "In transit: %s" % _queue_status(system, "training_transit")
+	_set_facility_icons(_mine_existing, _building_count(GameData.MINE_ID, buildings), MINE_ICON)
+	_set_facility_icons(_refinery_existing, _building_count(GameData.REFINERY_ID, buildings), REFINERY_ICON)
+	_refresh_construction_status_icons(system)
 	_manufacturing_tabs.current_tab = 0
 	_manufacturing_card.size = Vector2(360, 260)
 	_manufacturing_card.visible = true
+	_refresh_manufacturing_order()
 
 
 func _set_facility_icons(container: HBoxContainer, count: int, icon: Texture2D) -> void:
@@ -370,6 +420,68 @@ func _set_facility_icons(container: HBoxContainer, count: int, icon: Texture2D) 
 		container.add_child(icon_node)
 
 
+func _refresh_construction_status_icons(system: Dictionary) -> void:
+	var order: Variant = system.get("manufacturing_orders", {}).get("construction", {})
+	var under_count := int(order.get("remaining", 0)) if order is Dictionary else 0
+	var building_id := int(order.get("building_id", -1)) if order is Dictionary else -1
+	_set_facility_icons(_construction_building, 0, FACTORY_ICON)
+	_set_facility_icons(_shipyard_building, 0, FLEET_ICON)
+	_set_facility_icons(_training_building, 0, GROUND_BASE_ICON)
+	_set_facility_icons(_mine_building, 0, MINE_ICON)
+	_set_facility_icons(_refinery_building, 0, REFINERY_ICON)
+	_set_facility_icons(_construction_transit, 0, FACTORY_ICON)
+	_set_facility_icons(_shipyard_transit, 0, FLEET_ICON)
+	_set_facility_icons(_training_transit, 0, GROUND_BASE_ICON)
+	_set_facility_icons(_mine_transit, 0, MINE_ICON)
+	_set_facility_icons(_refinery_transit, 0, REFINERY_ICON)
+	var under_container := _under_construction_container(building_id)
+	if under_container != null:
+		_set_facility_icons(under_container, under_count, _building_icon(building_id))
+	_set_transit_icons(_transit_container(building_id), system.get("building_transit", []))
+
+
+func _under_construction_container(building_id: int) -> HBoxContainer:
+	match building_id:
+		GameData.SHIPYARD_ID:
+			return _shipyard_building
+		GameData.BASIC_TRAINING_ID:
+			return _training_building
+		GameData.MINE_ID:
+			return _mine_building
+		GameData.REFINERY_ID:
+			return _refinery_building
+		_:
+			return _construction_building
+
+
+func _transit_container(building_id: int) -> HBoxContainer:
+	match building_id:
+		GameData.SHIPYARD_ID:
+			return _shipyard_transit
+		GameData.BASIC_TRAINING_ID:
+			return _training_transit
+		GameData.MINE_ID:
+			return _mine_transit
+		GameData.REFINERY_ID:
+			return _refinery_transit
+		_:
+			return _construction_transit
+
+
+func _set_transit_icons(container: HBoxContainer, transit: Array) -> void:
+	for child in container.get_children():
+		child.queue_free()
+	for shipment in transit:
+		var delivery := shipment as Dictionary
+		var icon_node := TextureRect.new()
+		icon_node.custom_minimum_size = Vector2(28, 28)
+		icon_node.texture = _building_icon(int(delivery.get("building_id", -1)))
+		icon_node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_node.tooltip_text = "Building in transit"
+		container.add_child(icon_node)
+
+
 func _update_order_row(
 	count_label: Label,
 	preview: TextureRect,
@@ -382,12 +494,88 @@ func _update_order_row(
 	progress.value = 0.0
 
 
+func _set_idle_order_details() -> void:
+	var target_name := _system_name(_construction_target_system_id)
+	_fleet_status.text = "Cost: —"
+	_fleet_target.text = "Target: %s" % _system_name(_fleet_target_system_id)
+	_troop_status.text = "Cost: —"
+	_troop_target.text = "Target: %s" % _system_name(_training_target_system_id)
+	_construction_status.text = "Select a building to construct"
+	_construction_target.text = "Target: %s" % target_name
+
+
+func _refresh_manufacturing_order() -> void:
+	if _manufacturing_system_id < 0:
+		return
+	var system := _system_by_id(_manufacturing_system_id)
+	var target := _system_by_id(_construction_target_system_id)
+	var buildings: Array = system.get("buildings", [])
+	_fleet_target.text = "Target: %s" % _system_name(_fleet_target_system_id)
+	_troop_target.text = "Target: %s" % _system_name(_training_target_system_id)
+	_set_facility_icons(_construction_existing, _building_count(GameData.CONSTRUCTION_YARD_ID, buildings), FACTORY_ICON)
+	_set_facility_icons(_shipyard_existing, _building_count(GameData.SHIPYARD_ID, buildings), FLEET_ICON)
+	_set_facility_icons(_training_existing, _building_count(GameData.BASIC_TRAINING_ID, buildings), GROUND_BASE_ICON)
+	_set_facility_icons(_mine_existing, _building_count(GameData.MINE_ID, buildings), MINE_ICON)
+	_set_facility_icons(_refinery_existing, _building_count(GameData.REFINERY_ID, buildings), REFINERY_ICON)
+	_refresh_construction_status_icons(system)
+	_construction_available.text = str(_building_count(GameData.CONSTRUCTION_YARD_ID, buildings))
+	_fleet_available.text = str(_building_count(GameData.SHIPYARD_ID, buildings))
+	_troop_available.text = str(_building_count(GameData.BASIC_TRAINING_ID, buildings))
+	var orders: Dictionary = system.get('manufacturing_orders', {})
+	var order: Variant = orders.get('construction', {})
+	if order is Dictionary and not (order as Dictionary).is_empty():
+		var order_data: Dictionary = order
+		var building_id := int(order_data.get('building_id', -1))
+		var catalog := _game_data.building_catalog()
+		var entry: Dictionary = catalog.get(str(building_id), {})
+		var cycle_days := maxf(0.01, float(entry.get('daysToProduce', 1)))
+		var cost := maxi(1, int(entry.get('cost', 0)))
+		var progress := clampf(float(order_data.get('construction_points', 0)) / cost, 0.0, 1.0)
+		_construction_preview.texture = _building_icon(building_id)
+		_construction_progress.value = progress * 100.0
+		_set_facility_icons(_construction_building, int(order_data.get('remaining', 1)), _building_icon(building_id))
+		_construction_status.text = "%s: %d/%d points; %d remaining" % [
+			str(entry.get('name', 'Unknown')),
+			int(order_data.get('construction_points', 0)),
+			cost,
+			int(order_data.get('remaining', 1)),
+		]
+		_construction_target.text = "Target: %s" % _system_name(int(order_data.get('target_system_id', _construction_target_system_id)))
+		_assignment_status.text = "Construction order active."
+	else:
+		_construction_progress.value = 0.0
+		_set_facility_icons(_construction_building, 0, FACTORY_ICON)
+		_construction_status.text = "Select a building to construct"
+		_construction_target.text = "Target: %s" % _system_name(_construction_target_system_id)
+		_assignment_status.text = "Right-click the construction box to choose a building."
+	queue_redraw()
+
+
 func _building_count(building_id: int, buildings: Array) -> int:
 	var count := 0
 	for value in buildings:
 		if int(value) == building_id:
 			count += 1
 	return count
+
+
+func _system_name(system_id: int) -> String:
+	var system := _system_by_id(system_id)
+	return str(system.get("tag", "Unselected")) if not system.is_empty() else "Unselected"
+
+
+func _building_icon(building_id: int) -> Texture2D:
+	match building_id:
+		GameData.MINE_ID:
+			return MINE_ICON
+		GameData.REFINERY_ID:
+			return REFINERY_ICON
+		GameData.SHIPYARD_ID:
+			return FLEET_ICON
+		GameData.BASIC_TRAINING_ID:
+			return GROUND_BASE_ICON
+		_:
+			return FACTORY_ICON
 
 
 func _queue_status(system: Dictionary, key: String) -> String:
@@ -408,29 +596,93 @@ func _system_by_id(system_id: int) -> Dictionary:
 
 func _on_manufacturing_close_pressed() -> void:
 	_manufacturing_card.visible = false
+	_manufacturing_system_id = -1
+	_manufacturing_source_card = null
+	_manufacturing_minimized = false
 
 
-func _input(event: InputEvent) -> void:
-	if not _manufacturing_card.visible:
+func _on_manufacturing_minimize_pressed() -> void:
+	_manufacturing_minimized = not _manufacturing_minimized
+	_manufacturing_tabs.visible = not _manufacturing_minimized
+	_manufacturing_card.size = Vector2(360, 52 if _manufacturing_minimized else 260)
+	_manufacturing_minimize.text = "+" if _manufacturing_minimized else "_"
+	_manufacturing_minimize.tooltip_text = "Restore manufacturing overlay" if _manufacturing_minimized else "Minimize manufacturing overlay"
+
+
+func _on_manufacturing_sector_pressed() -> void:
+	if _manufacturing_source_card == null:
 		return
-	if event is InputEventMouseButton:
-		var mouse_button := event as InputEventMouseButton
-		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
-			return
-		if mouse_button.pressed:
-			if _manufacturing_close.get_global_rect().has_point(mouse_button.position):
-				return
-			if _manufacturing_header.get_global_rect().has_point(mouse_button.position):
-				_overlay_dragging = true
-				_overlay_drag_offset = mouse_button.position - _manufacturing_card.global_position
-				get_viewport().set_input_as_handled()
-		elif _overlay_dragging:
-			_overlay_dragging = false
-			get_viewport().set_input_as_handled()
-	elif event is InputEventMouseMotion and _overlay_dragging:
-		var motion := event as InputEventMouseMotion
-		_manufacturing_card.global_position = motion.position - _overlay_drag_offset
-		get_viewport().set_input_as_handled()
+	_manufacturing_source_card.visible = true
+	_manufacturing_source_card.flash()
+	_manufacturing_source_card.move_to_front()
+	_manufacturing_card.visible = false
+	_manufacturing_minimized = false
+
+
+func _on_action_menu_item_pressed(action_id: int) -> void:
+	if action_id == 1:
+		_open_build_overlay()
+	elif action_id == 2 and _game_data != null:
+		_game_data.cancel_building_order(_manufacturing_system_id)
+		_refresh_manufacturing_order()
+		_refresh_sector_cards()
+		queue_redraw()
+
+
+func _open_build_overlay() -> void:
+	if _game_data == null or _manufacturing_system_id < 0:
+		return
+	var entries: Array = []
+	var catalog := _game_data.building_catalog()
+	var ids := catalog.keys()
+	ids.sort_custom(func(a: Variant, b: Variant) -> bool: return int(a) < int(b))
+	for key in ids:
+		var entry: Dictionary = catalog[key]
+		if not entry.has('cost') or not entry.has('daysToProduce'):
+			continue
+		entries.append({
+			"id": int(key),
+			"label": "%s - %d refined / %s day(s)" % [
+				str(entry.get('name', 'Building')),
+				int(entry.get('cost', 0)),
+				str(entry.get('daysToProduce', 1)),
+			],
+		})
+	if entries.is_empty():
+		return
+	_build_modal.configure(entries, _available_slots_for_entry(catalog.get(str(entries[0]["id"]), {})))
+	_set_build_modal_visible(true)
+
+
+func _on_build_catalog_selected(building_id: int) -> void:
+	var entry: Dictionary = _game_data.building_catalog().get(str(building_id), {})
+	_build_modal.set_quantity_limit(_available_slots_for_entry(entry))
+
+
+func _available_slots_for_entry(entry: Dictionary) -> int:
+	var system := _system_by_id(_manufacturing_system_id)
+	var target := _system_by_id(_construction_target_system_id)
+	var slots: Dictionary = system.get("%s_slots" % str(entry.get("slot", "energy")), {})
+	if not target.is_empty():
+		slots = target.get("%s_slots" % str(entry.get("slot", "energy")), {})
+	return maxi(0, int(slots.get("total", 0)) - int(slots.get("used", 0)))
+
+
+func _on_build_confirmed(building_id: int, quantity: int) -> void:
+	if _game_data != null and _game_data.queue_building(_manufacturing_system_id, building_id, quantity, _construction_target_system_id):
+		_refresh_manufacturing_order()
+		_refresh_sector_cards()
+		queue_redraw()
+		_set_build_modal_visible(false)
+
+
+func _on_build_modal_close_pressed() -> void:
+	_set_build_modal_visible(false)
+
+
+func _set_build_modal_visible(visible: bool) -> void:
+	_build_modal_backdrop.visible = visible
+	_build_modal.visible = visible
 
 
 func _systems_in_sector(sector_id: int) -> Array:
@@ -509,6 +761,10 @@ func _setup_map_filter() -> void:
 
 
 func _process(delta: float) -> void:
+	if _target_dragging:
+		_target_drag_position = get_global_mouse_position()
+		_target_drag_system_id = _target_system_at(_target_drag_position)
+		queue_redraw()
 	if delta > 0.0 and not _day_lengths.is_empty():
 		_tick(delta)
 
@@ -531,6 +787,9 @@ func _process_day() -> void:
 	if _game_data != null:
 		_game_data.process_day()
 		_refresh_resource_labels()
+		if _manufacturing_card.visible:
+			_refresh_manufacturing_order()
+			_refresh_sector_cards()
 	_process_units()
 	_process_fleets()
 	_process_logistics()
@@ -615,6 +874,88 @@ func _click_at(point: Vector2) -> void:
 		select_sector(best_sector)
 
 
+func _target_system_at(screen_position: Vector2) -> int:
+	var point := get_global_transform_with_canvas().affine_inverse() * screen_position
+	var best_id := -1
+	var best_distance := _click_radius * 2.0
+	for system in _systems:
+		if not bool(system.get("explored", false)) or int(system.get("owner", -1)) != _side:
+			continue
+		var distance := map_pos(system["pos"]).distance_to(point)
+		if distance < best_distance:
+			best_distance = distance
+			best_id = int(system.get("id", -1))
+	return best_id
+
+
+func _on_target_drag_started(panel_id: int) -> void:
+	_target_dragging = true
+	_target_panel_id = panel_id
+	_minimap_target_selected = false
+	_target_drag_position = get_global_mouse_position()
+	_target_drag_system_id = -1
+	for card in _cards:
+		var system_card := card as SystemCard
+		if system_card.visible:
+			system_card.begin_target_selection()
+	queue_redraw()
+
+
+func _on_target_drag_ended(panel_id: int, screen_position: Vector2) -> void:
+	_target_panel_id = panel_id
+	for card in _cards:
+		(card as SystemCard).end_target_selection()
+	var minimap_target := _target_from_open_minimap(screen_position)
+	if minimap_target >= 0:
+		_on_minimap_target_selected(minimap_target)
+		_minimap_target_selected = false
+		_target_dragging = false
+		queue_redraw()
+		return
+	if _minimap_target_selected:
+		_minimap_target_selected = false
+		_target_dragging = false
+		queue_redraw()
+		return
+	_target_dragging = false
+	_target_drag_position = get_global_mouse_position()
+	_target_drag_system_id = _target_system_at(_target_drag_position)
+	if _target_drag_system_id >= 0:
+		_set_target_system(_target_drag_system_id)
+		_refresh_manufacturing_order()
+	queue_redraw()
+
+
+func _target_from_open_minimap(screen_position: Vector2) -> int:
+	for card in _cards:
+		var system_card := card as SystemCard
+		var target_id := system_card.target_system_at_global(screen_position)
+		if target_id >= 0:
+			return target_id
+	return -1
+
+
+func _on_minimap_target_selected(system_id: int) -> void:
+	var target := _system_by_id(system_id)
+	if target.is_empty() or not bool(target.get("explored", false)) or int(target.get("owner", -1)) != _side:
+		return
+	_minimap_target_selected = true
+	_target_drag_system_id = system_id
+	_set_target_system(system_id)
+	_refresh_manufacturing_order()
+	queue_redraw()
+
+
+func _set_target_system(system_id: int) -> void:
+	match _target_panel_id:
+		0:
+			_fleet_target_system_id = system_id
+		1:
+			_training_target_system_id = system_id
+		_:
+			_construction_target_system_id = system_id
+
+
 func _double_click_at(point: Vector2) -> void:
 	var best: Dictionary = {}
 	var best_dist := _sector_radius * 2.0
@@ -673,6 +1014,8 @@ func _compute_transform() -> void:
 
 func _draw() -> void:
 	for sys in _systems:
+		if _is_hidden_enemy_headquarters(sys):
+			continue
 		var p := map_pos(sys["pos"])
 		var color: Color
 		if _map_filter == 1 and sys["explored"]:
@@ -689,6 +1032,11 @@ func _draw() -> void:
 		for s in _sectors:
 			draw_string(font, map_pos(s["pos"]) + Vector2(10, -10), s["tag"],
 				HORIZONTAL_ALIGNMENT_LEFT, -1.0, int(GalaxyData.fonts()["sector_tag"]), _theme.get("tag", Color.WHITE))
+	if _target_dragging:
+		var ghost_position := get_global_transform_with_canvas().affine_inverse() * _target_drag_position
+		var target_color: Color = _theme.get("alliance", Color.GREEN) if _target_drag_system_id >= 0 else Color(1.0, 0.35, 0.35)
+		draw_texture_rect(FACTORY_ICON, Rect2(ghost_position - Vector2(18, 18), Vector2(36, 36)), false, Color(target_color, 0.9))
+		draw_arc(ghost_position, 23.0, 0.0, TAU, 24, target_color, 2.0)
 
 func _draw_star(position: Vector2, radius: float, color: Color, uncharted: bool) -> void:
 	if uncharted:
@@ -723,3 +1071,11 @@ func _draw_headquarters_marker(system: Dictionary, position: Vector2, radius: fl
 		draw_polyline(points, accent, maxf(2.0, 2.0 * _zoom), true)
 		draw_string(ThemeDB.fallback_font, position + Vector2(r + 4.0, 4.0),
 			"HQ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, accent)
+
+
+func _is_hidden_enemy_headquarters(system: Dictionary) -> bool:
+	if _game_data == null:
+		return false
+	var headquarters: Dictionary = _game_data.getData("headquarters")
+	var enemy_hq: Dictionary = headquarters.get(1 - _side, {})
+	return int(enemy_hq.get("system_id", -1)) == int(system.get("id", -1))
