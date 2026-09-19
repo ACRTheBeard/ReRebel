@@ -1,16 +1,16 @@
-# ReRebel Godot Session Handoff — 2026-09-14
+# ReRebel Godot Session Handoff — 2026-09-19
 
 ## State
-- Status: `COMPLETE` — this handoff has been closed out for the current prototype state.
-- Branch: `fork/godot` (HEAD `c30e1c6`). User commits directly; assistant leaves work uncommitted.
-- Dirty: only `game/theme/theme.cfg` (user's own live retunes: icon/bar sizes, day lengths).
+- Status: `IN PROGRESS` — manufacturing construction and targeting are implemented; the latest clock optimization and drag-input fix are uncommitted.
+- Branch: `fork/godot` (pushed baseline `2e8edff`; current worktree has follow-up edits).
+- Dirty: `game/galaxy/galaxy_map.gd` and `game/galaxy/manufacturing_overlay.gd`.
 - Toolchain: `~/code/godot/bin/Godot_v4.7.2-stable_linux.x86_64`, templates in `~/code/godot/xdg`.
 - Latest probe: full `GALAXY-TEST-PASS` on source tree. Windows export and visual QA were completed for the current handoff; no blocking follow-up remains in this session.
 
 ## What exists (all verified headless via /tmp/galaxy_probe.gd)
 - Main menu → galaxy map (Standard/Large/Huge, Alliance/Empire, 3 difficulties).
 - Top bar: Menu, `Day N`, speed picker (Very Slow/Slow/Normal/Fast; day lengths themed, currently `240/60/3/0.5` s/day). Setup readout removed.
-- Day clock ticks in `_process`, speed persists to `user://rerebel_settings.cfg`.
+- Day clock uses a 100 ms `Timer` instead of checking for day changes every rendered frame. Galaxy-map `_process()` is disabled normally and enabled only during target dragging.
 - Backdrop: baked `game/art/galaxy.png` (6-arm spiral, pure-stdlib generator at `/tmp/make_galaxy.py`) centered on sector centroid, + seeded starfield/nebulae. Rebake: `python3 /tmp/make_galaxy.py game/art/galaxy.png`, then `--import`.
 - Sector cards: 2 slots, one row, 442×640 each (max clean fit beside 364px panel). Header = tag + `x` button. Charted count removed from card (still in side panel).
 - Card mini-map: non-uniform stretch-to-fill layout with decor-aware padding; dots auto-fit (`dot_mini`–`dot_max`, currently 9–14).
@@ -54,3 +54,35 @@
   - `game/galaxy/system_card.tscn`
 - Validation completed with Godot headless scene startup, diagnostics, and `git diff --check`.
 - Latest commit contains the accumulated manufacturing overlay work and HQ political-share correction. Continue from the pushed `fork/godot` branch; do not assume the overlay is a separate uncommitted change.
+
+## Construction and targeting handoff — 2026-09-19
+- Construction orders are queued from the Construction assignment box and use catalog `cost` as total construction points.
+- Each Construction Yard contributes one point per completed `daysToProduce` cycle. Available refined goods limit how many yards can contribute in a cycle; overflow points carry forward.
+- Mine and Refinery construction consumes refined goods. Their catalog `producesWith` values describe normal production and must not be used as construction inputs.
+- Quantity orders reserve destination slots immediately. Same-planet completion adds the building directly; remote completion creates a one-day transit record.
+- Destination targets may be different from the manufacturing source planet, but must be explored and owned by the player faction.
+- Mine and Refinery have dedicated icons:
+  - `game/art/mine.svg`
+  - `game/art/refinery.svg`
+- Under-construction and in-transit icons are routed to the target building's detail tab, including Mine and Refinery tabs.
+- The Construction, Fleet, and Training assignment panels each maintain an independent target system ID.
+- Dragging from an assignment panel emits `target_drag_started(panel_id)` and `target_drag_ended(panel_id, screen_position)`. Open sector mini-maps are checked before the galaxy-map fallback selector.
+- Mini-map targeting is wired through:
+  - `game/galaxy/sector_mini_map.gd`
+  - `game/galaxy/system_card.gd`
+  - `game/galaxy/system_card.tscn`
+- Enemy headquarters is hidden from the player's galaxy-map rendering and cannot be selected as a construction target.
+- The latest uncommitted input fix makes child controls inside the manufacturing order panels ignore mouse input and handles overlay movement globally through `_input()`. Header labels ignore mouse input while header buttons remain interactive.
+- Latest validation passed:
+  - Godot editor import/rebuild
+  - Headless `res://galaxy/galaxy_map.tscn` startup
+  - GDScript diagnostics
+  - `git diff --check`
+
+## Known follow-ups
+- Visually test the latest manufacturing overlay drag fix; the user previously reported that dragging still did not work despite successful headless validation.
+- Commit and push the uncommitted `galaxy_map.gd` / `manufacturing_overlay.gd` changes after visual confirmation.
+- Confirm CPU usage in the running game. The day-check loop was moved from per-frame `_process(delta)` to a 100 ms Timer, but no profiler measurement has yet been recorded.
+- Fleet and troop production catalogs/orders are still placeholders; their target labels exist, but only construction is simulated.
+- Construction transit duration is still a fixed one-day placeholder.
+- Construction target selection currently starts from the order panels; the manufacturing overlay itself remains stationary while the target ghost follows the cursor.

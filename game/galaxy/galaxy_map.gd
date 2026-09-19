@@ -51,6 +51,7 @@ var _speed := 2
 var _speed_names := PackedStringArray()
 var _day_lengths := PackedFloat32Array()
 var _map_filter := 0
+var _clock_timer: Timer
 
 const CARD_SCENE := preload("res://galaxy/system_card.tscn")
 const ALLIANCE_EMBLEM := preload("res://art/alliance_emblem.png")
@@ -128,6 +129,7 @@ var _game_data: GameData
 
 
 func _ready() -> void:
+	set_process(false)
 	var settings := GalaxyData.load_settings()
 	_side = int(settings["side"])
 	_theme = GalaxyData.colors()
@@ -147,6 +149,12 @@ func _ready() -> void:
 	_game_data = GameData.new(_side, [], _systems, int(settings["difficulty"]))
 	_setup_map_filter()
 	_setup_clock(int(settings["speed"]))
+	_clock_timer = Timer.new()
+	_clock_timer.name = "ClockTimer"
+	_clock_timer.wait_time = 0.1
+	_clock_timer.timeout.connect(_on_clock_timer_timeout)
+	add_child(_clock_timer)
+	_clock_timer.start()
 	_compute_transform()
 	_center_galaxy()
 	_populate_sector_picker()
@@ -760,13 +768,16 @@ func _setup_map_filter() -> void:
 	_filter_button.select(_map_filter)
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if _target_dragging:
 		_target_drag_position = get_global_mouse_position()
 		_target_drag_system_id = _target_system_at(_target_drag_position)
 		queue_redraw()
-	if delta > 0.0 and not _day_lengths.is_empty():
-		_tick(delta)
+
+
+func _on_clock_timer_timeout() -> void:
+	if not _day_lengths.is_empty():
+		_tick(0.1)
 
 
 ## Advance the clock by real seconds; split out for exact testing.
@@ -890,6 +901,7 @@ func _target_system_at(screen_position: Vector2) -> int:
 
 func _on_target_drag_started(panel_id: int) -> void:
 	_target_dragging = true
+	set_process(true)
 	_target_panel_id = panel_id
 	_minimap_target_selected = false
 	_target_drag_position = get_global_mouse_position()
@@ -910,14 +922,17 @@ func _on_target_drag_ended(panel_id: int, screen_position: Vector2) -> void:
 		_on_minimap_target_selected(minimap_target)
 		_minimap_target_selected = false
 		_target_dragging = false
+		set_process(false)
 		queue_redraw()
 		return
 	if _minimap_target_selected:
 		_minimap_target_selected = false
 		_target_dragging = false
+		set_process(false)
 		queue_redraw()
 		return
 	_target_dragging = false
+	set_process(false)
 	_target_drag_position = get_global_mouse_position()
 	_target_drag_system_id = _target_system_at(_target_drag_position)
 	if _target_drag_system_id >= 0:

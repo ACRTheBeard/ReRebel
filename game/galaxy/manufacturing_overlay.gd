@@ -23,6 +23,10 @@ var _target_panel_id := CONSTRUCTION_PANEL
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	_prepare_target_box(_construction_box)
+	_prepare_target_box(_fleet_box)
+	_prepare_target_box(_training_box)
+	_prepare_header(_header)
 	_action_menu = PopupMenu.new()
 	_action_menu.name = "ManufacturingActions"
 	_action_menu.id_pressed.connect(func(action_id: int) -> void: action_requested.emit(action_id))
@@ -31,6 +35,36 @@ func _ready() -> void:
 	_fleet_box.gui_input.connect(_on_fleet_box_gui_input)
 	_training_box.gui_input.connect(_on_training_box_gui_input)
 	_header.gui_input.connect(_on_header_gui_input)
+
+
+func _prepare_target_box(box: Control) -> void:
+	box.mouse_filter = Control.MOUSE_FILTER_STOP
+	for child in box.get_children():
+		if child is Control:
+			_prepare_target_child(child as Control)
+
+
+func _prepare_target_child(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in control.get_children():
+		if child is Control:
+			_prepare_target_child(child as Control)
+
+
+func _prepare_header(header: Control) -> void:
+	header.mouse_filter = Control.MOUSE_FILTER_STOP
+	for child in header.get_children():
+		if child is Control:
+			_prepare_header_child(child as Control)
+
+
+func _prepare_header_child(control: Control) -> void:
+	if control is Button:
+		return
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in control.get_children():
+		if child is Control:
+			_prepare_header_child(child as Control)
 
 
 func _on_construction_box_gui_input(event: InputEvent) -> void:
@@ -92,16 +126,21 @@ func _gui_input(event: InputEvent) -> void:
 				_action_menu.position = Vector2i(get_global_mouse_position())
 				_action_menu.popup()
 				accept_event()
-	elif event is InputEventMouseMotion and _dragging:
-		global_position = get_global_mouse_position() - _drag_offset
-		accept_event()
 
 
 func _input(event: InputEvent) -> void:
-	if not _target_dragging or not event is InputEventMouseButton:
-		return
-	var mouse_button := event as InputEventMouseButton
-	if mouse_button.button_index == MOUSE_BUTTON_LEFT and not mouse_button.pressed:
-		_target_dragging = false
-		target_drag_ended.emit(_target_panel_id, get_viewport().get_mouse_position())
+	if _dragging and event is InputEventMouseMotion:
+		global_position = get_global_mouse_position() - _drag_offset
 		get_viewport().set_input_as_handled()
+		return
+	if not _target_dragging and not _dragging:
+		return
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.button_index == MOUSE_BUTTON_LEFT and not mouse_button.pressed:
+			if _target_dragging:
+				_target_dragging = false
+				target_drag_ended.emit(_target_panel_id, get_viewport().get_mouse_position())
+			if _dragging:
+				_dragging = false
+			get_viewport().set_input_as_handled()
